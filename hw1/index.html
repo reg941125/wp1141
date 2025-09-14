@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reg's space</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 導航欄 -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-left">
+                <div class="site-title">Reg's space</div>
+                <a href="#home" class="nav-link">首頁</a>
+                <a href="#about" class="nav-link">關於我</a>
+                <a href="#skills" class="nav-link">技能</a>
+            </div>
+            <div class="nav-right">
+                <a href="https://www.facebook.com/jiang.rui.zhe.901115" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                <!-- <a href="#" class="social-link"><i class="fab fa-twitter"></i></a> -->
+                <a href="https://www.instagram.com/cjc.reg_941125?igsh=enVzZzY0bm5vdWto" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="https://github.com/reg941125" class="social-link"><i class="fab fa-github"></i></a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要內容 -->
+    <main class="main">
+        <!-- 首頁區塊 -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <div class="hero-image">
+                    <img src="photo_me.jpg" alt="我的照片" class="profile-image">
+                </div>
+                <div class="hero-text">
+                    <h1 class="hero-title">我是 姜睿喆</h1>
+                    <h2 class="hero-subtitle">一位網頁開發者，現居台灣</h2>
+                    <p class="hero-description">
+                        我熱愛創造美觀且功能強大的網頁應用程式。擁有豐富的前端開發經驗，
+                        專精於HTML、CSS和TypeScript。我喜歡學習新技術，
+                        並將創意想法轉化為實際的數位產品。
+                    </p>
+                    <button class="cta-button" onclick="scrollToSection('contact')">聯絡我</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 關於我區塊 -->
+        <section id="about" class="about">
+            <div class="container">
+                <h2 class="section-title">關於我</h2>
+                <div class="about-content">
+                    <div class="about-item">
+                        <h3>自我介紹</h3>
+                        <p>
+                            我是一位充滿熱情的網頁開發者，專注於創建用戶友好的數位體驗。
+                            我相信好的設計不僅要美觀，更要實用。我喜歡挑戰複雜的問題，
+                            並用創新的方式來解決它們。
+                        </p>
+                    </div>
+                    <div class="about-item">
+                        <h3>興趣</h3>
+                        <ul>
+                            <li>網頁開發與設計</li>
+                            <li>學習新技術</li>
+                            <li>音樂創作與演奏</li>
+                            <li>球類運動</li>
+                        </ul>
+                    </div>
+                    <div class="about-item">
+                        <h3>價值觀</h3>
+                        <div class="motto-content">
+                            <p class="motto-description">
+                                我相信在快節奏的現代生活中，保持內心的平靜是成功的關鍵。
+                                無論是在學習新技術、解決複雜問題，還是在面對挑戰時，
+                                我都會先讓自己靜下心來，仔細思考，然後再採取行動。
+                                這種沉穩的態度讓我能夠更深入地理解問題本質，
+                                並找到最有效的解決方案。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="about-item music-section">
+                        <h3>音樂世界</h3>
+                        <div class="music-content">
+                            <div class="music-text">
+                                <p>
+                                    音樂是我生命中不可或缺的一部分。從高中開始學習吉他，到現在已經成為我放鬆心情、
+                                    表達創意的重要方式。我喜歡彈奏各種風格的音樂，從古典到搖滾，從民謠到爵士。
+                                    音樂不僅讓我學會了耐心和專注，也培養了我對美的敏感度。
+                                </p>
+                                <p>
+                                    在程式設計的過程中，我發現音樂和程式碼有著相似的結構性美感。
+                                    就像編寫程式需要邏輯和創意的結合，演奏音樂也需要技巧和情感的融合。
+                                    這種跨領域的學習讓我在技術和藝術之間找到了平衡。
+                                </p>
+                            </div>
+                            <div class="music-image">
+                                <img src="photo_guitar.jpg" alt="彈吉他的照片" class="guitar-image">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-item volleyball-section">
+                        <h3>排球運動</h3>
+                        <div class="volleyball-content">
+                            <div class="volleyball-text">
+                                <p>
+                                    排球是我最喜愛的運動之一，從大學時期開始接觸，到現在已經成為我生活中重要的休閒活動。
+                                    這項運動不僅鍛鍊了我的體能，更重要的是培養了我的團隊合作精神和抗壓能力。
+                                    在球場上，每一次傳球、扣殺都需要與隊友的默契配合，這讓我學會了如何在壓力下保持冷靜。
+                                </p>
+                                <p>
+                                    排球運動的節奏感和技術性讓我著迷，就像程式設計一樣，需要不斷練習和精進技巧。
+                                    在球場上的專注力和快速反應能力，也幫助我在工作中能夠更有效地處理複雜的技術問題。
+                                    運動讓我保持身心健康，也為我的創意工作提供了源源不斷的靈感。
+                                </p>
+                            </div>
+                            <div class="volleyball-image">
+                                <img src="photo_volleyball.png" alt="打排球的照片" class="volleyball-photo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-item experience-section">
+                        <h3>經歷</h3>
+                        <div class="experience-content">
+                            <div class="experience-text">
+                                <div class="experience">
+                                    <div class="exp-item">
+                                        <h4>前端開發工程師</h4>
+                                        <p class="exp-company">某科技公司</p>
+                                        <p class="exp-period">2022 - 至今</p>
+                                    </div>
+                                    <div class="exp-item">
+                                        <h4>網頁設計師</h4>
+                                        <p class="exp-company">某設計工作室</p>
+                                        <p class="exp-period">2020 - 2022</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="experience-image">
+                                <img src="photo_lecture.jpg" alt="講座照片" class="lecture-photo">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技能區塊 -->
+        <section id="skills" class="skills">
+            <div class="container">
+                <h2 class="section-title">技能</h2>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>前端技術</h3>
+                        <div class="skill-list">
+                            <span class="skill-tag">HTML5</span>
+                            <span class="skill-tag">CSS3</span>
+                            <span class="skill-tag">JavaScript</span>
+                            <span class="skill-tag">TypeScript</span>
+                            <span class="skill-tag">React</span>
+                            <span class="skill-tag">Vue.js</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h3>工具與框架</h3>
+                        <div class="skill-list">
+                            <span class="skill-tag">Git</span>
+                            <span class="skill-tag">Webpack</span>
+                            <span class="skill-tag">Node.js</span>
+                            <span class="skill-tag">Sass</span>
+                            <span class="skill-tag">Figma</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h3>其他技能</h3>
+                        <div class="skill-list">
+                            <span class="skill-tag">UI/UX設計</span>
+                            <span class="skill-tag">響應式設計</span>
+                            <span class="skill-tag">SEO優化</span>
+                            <span class="skill-tag">專案管理</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 聯繫方式區塊 -->
+        <section id="contact" class="contact">
+            <div class="container">
+                <h2 class="section-title">聯繫方式</h2>
+                <div class="contact-content">
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>your.email@example.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>+886 912 345 678</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>台灣台北市</span>
+                        </div>
+                    </div>
+                    <div class="contact-form">
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <input type="text" id="name" name="name" placeholder="您的姓名" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="email" name="email" placeholder="您的信箱" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea id="message" name="message" placeholder="您的訊息" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-button">發送訊息</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="footer">
+        <p>&copy; 2024 我的個人網站. 保留所有權利.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
