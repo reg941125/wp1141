@@ -82,3 +82,6 @@ npm start
 - [BBC Sound Effects](https://sound-effects.bbcrewind.co.uk/)
 
 享受遊戲吧！🎉🎵
+
+## chat history
+- [chat history](./chat_history.md)
