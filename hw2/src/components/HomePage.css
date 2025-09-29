@@ -1,0 +1,121 @@
+.home-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.game-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="hills" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%234CAF50;stop-opacity:1" /><stop offset="50%" style="stop-color:%23388E3C;stop-opacity:1" /><stop offset="100%" style="stop-color:%232E7D32;stop-opacity:1" /></linearGradient></defs><path d="M0,600 Q200,400 400,450 T800,400 T1200,350 L1200,800 L0,800 Z" fill="url(%23hills)"/><path d="M0,700 Q300,500 600,550 T1200,500 L1200,800 L0,800 Z" fill="url(%23hills)" opacity="0.7"/></svg>');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.home-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 60px 80px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.game-title {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 50px;
+  letter-spacing: 2px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  align-items: center;
+}
+
+.game-button {
+  padding: 18px 50px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.game-button:hover::before {
+  left: 100%;
+}
+
+.start-button {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  color: white;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.start-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
+  background: linear-gradient(45deg, #45a049, #4CAF50);
+}
+
+.controls-button {
+  background: linear-gradient(45deg, #2196F3, #1976D2);
+  color: white;
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+}
+
+.controls-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+  background: linear-gradient(45deg, #1976D2, #2196F3);
+}
+
+.settings-button {
+  background: linear-gradient(45deg, #FF9800, #F57C00);
+  color: white;
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.settings-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.6);
+  background: linear-gradient(45deg, #F57C00, #FF9800);
+}
+
+.game-button:active {
+  transform: translateY(-1px);
+}
+
