@@ -32,11 +32,11 @@ const HomePage: React.FC<HomePageProps> = ({
     <Box
       sx={{
         minHeight: '100vh',
+        width: '100vw',
         background: 'linear-gradient(135deg, #1A1410 0%, #2D1810 100%)',
-        py: 4,
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ width: '100%', py: 4 }}>
         {/* Language Switcher */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <LanguageSwitcher
@@ -74,7 +74,7 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Mood Selection */}
         {moods.length > 0 ? (
           <Fade in={true} timeout={1000}>
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ py: 4 }}>
               <MoodSelector
                 moods={moods}
                 selectedMood=""

@@ -29,6 +29,9 @@ const theme = createTheme({
       secondary: '#FFCCBC',
     },
   },
+  shape: {
+    borderRadius: 8,
+  },
   typography: {
     fontFamily: [
       '-apple-system',
