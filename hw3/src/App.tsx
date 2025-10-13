@@ -6,6 +6,7 @@ import PlaylistPage from './pages/PlaylistPage';
 import CustomPlaylistPage from './pages/CustomPlaylistPage';
 import CustomPlaylistPlayerPage from './pages/CustomPlaylistPlayerPage';
 import LanguageSelectionDialog from './components/LanguageSelectionDialog';
+import GlobalHeader from './components/GlobalHeader';
 import { Song, Language } from './types/Song';
 import { parseCSV, getMoodsFromSongs } from './utils/csvParser';
 
@@ -138,8 +139,16 @@ function App() {
           onSelect={handleLanguageSelect}
         />
 
-                {/* Routes */}
-                {selectedLanguage && !loading && (
+        {/* Global Header */}
+        {selectedLanguage && !loading && (
+          <GlobalHeader
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={handleLanguageChange}
+          />
+        )}
+
+        {/* Routes */}
+        {selectedLanguage && !loading && (
                   <Routes>
                     <Route
                       path="/"

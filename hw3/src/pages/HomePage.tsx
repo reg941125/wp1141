@@ -9,7 +9,6 @@ import {
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoodSelector from '../components/MoodSelector';
 import CustomPlaylistSelector from '../components/CustomPlaylistSelector';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Language } from '../types/Song';
 
 interface HomePageProps {
@@ -37,37 +36,16 @@ const HomePage: React.FC<HomePageProps> = ({
     <Box
       sx={{
         minHeight: '100vh',
-        width: '100vw',
+        width: '100%',
+        maxWidth: '100vw',
         background: 'linear-gradient(135deg, #1A1410 0%, #2D1810 100%)',
+        pt: 8, // Add padding for global header
+        overflow: 'hidden',
       }}
     >
       <Container maxWidth="lg" sx={{ width: '100%', py: 4 }}>
-        {/* Language Switcher */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <LanguageSwitcher
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={onLanguageChange}
-          />
-        </Box>
-
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-            <MusicNoteIcon sx={{ fontSize: 48, color: 'primary.main', mr: 2 }} />
-            <Typography
-              variant="h2"
-              component="h1"
-              sx={{
-                background: 'linear-gradient(45deg, #FF8A65 30%, #FFAB91 90%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 700,
-              }}
-            >
-              情緒歌單
-            </Typography>
-          </Box>
           <Typography variant="h6" color="text.secondary">
             根據你的心情，找到最適合的音樂
           </Typography>

@@ -12,7 +12,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SongListItem from '../components/SongListItem';
 import SongDetailPanel from '../components/SongDetailPanel';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import MusicPlayer from '../components/MusicPlayer';
 import { Song, Language } from '../types/Song';
 
@@ -103,14 +102,17 @@ const PlaylistPage: React.FC<PlaylistPageProps> = ({
     <Box
       sx={{
         minHeight: '100vh',
-        width: '100vw',
+        width: '100%',
+        maxWidth: '100vw',
         background: 'linear-gradient(135deg, #1A1410 0%, #2D1810 100%)',
         pb: currentPlayingSong ? 12 : 0, // Add padding at bottom when player is visible
+        pt: 8, // Add padding for global header
+        overflow: 'hidden',
       }}
     >
       {/* Top Bar */}
       <Container maxWidth="xl" sx={{ width: '100%' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', py: 2 }}>
           <IconButton
             onClick={handleBack}
             sx={{
@@ -122,10 +124,6 @@ const PlaylistPage: React.FC<PlaylistPageProps> = ({
           >
             <ArrowBackIcon sx={{ fontSize: 32 }} />
           </IconButton>
-          <LanguageSwitcher
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={onLanguageChange}
-          />
         </Box>
 
         {/* Header - Moved to Grid */}

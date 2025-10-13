@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Paper,
   Box,
@@ -29,6 +29,8 @@ interface SongSelectorProps {
   selectedSongs: Song[];
   onSelectionChange: (selectedSongs: Song[]) => void;
   onSavePlaylist: (playlistName: string, selectedSongs: Song[]) => void;
+  isEditing?: boolean;
+  editingPlaylistName?: string;
 }
 
 const SongSelector: React.FC<SongSelectorProps> = ({
@@ -36,8 +38,15 @@ const SongSelector: React.FC<SongSelectorProps> = ({
   selectedSongs,
   onSelectionChange,
   onSavePlaylist,
+  isEditing = false,
+  editingPlaylistName = '',
 }) => {
-  const [playlistName, setPlaylistName] = useState('');
+  const [playlistName, setPlaylistName] = useState(editingPlaylistName);
+
+  // 當編輯歌單名稱改變時，更新本地狀態
+  useEffect(() => {
+    setPlaylistName(editingPlaylistName);
+  }, [editingPlaylistName]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMood, setSelectedMood] = useState<string>('全部');
 
@@ -200,7 +209,7 @@ const SongSelector: React.FC<SongSelectorProps> = ({
             disabled={!playlistName.trim() || selectedSongs.length === 0}
             startIcon={<AddIcon />}
           >
-            建立歌單 ({selectedSongs.length})
+            {isEditing ? `更新歌單 (${selectedSongs.length})` : `建立歌單 (${selectedSongs.length})`}
           </Button>
         </Box>
 

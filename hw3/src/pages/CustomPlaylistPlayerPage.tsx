@@ -140,14 +140,17 @@ const CustomPlaylistPlayerPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        width: '100vw',
+        width: '100%',
+        maxWidth: '100vw',
         background: 'linear-gradient(135deg, #1A1410 0%, #2D1810 100%)',
         pb: currentPlayingSong ? 12 : 0,
+        pt: 8, // Add padding for global header
+        overflow: 'hidden',
       }}
     >
       {/* Top Bar */}
       <Container maxWidth="xl" sx={{ width: '100%' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', py: 2 }}>
           <IconButton
             onClick={handleBack}
             sx={{
