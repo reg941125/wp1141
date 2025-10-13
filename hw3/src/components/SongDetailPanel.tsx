@@ -9,6 +9,7 @@ import {
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PersonIcon from '@mui/icons-material/Person';
 import { Song } from '../types/Song';
+import { getYouTubeThumbnail } from '../utils/youtubeThumbnail';
 
 interface SongDetailPanelProps {
   song: Song | null;
@@ -40,6 +41,8 @@ const SongDetailPanel: React.FC<SongDetailPanelProps> = ({ song }) => {
     );
   }
 
+  const thumbnailUrl = getYouTubeThumbnail(song.youtubeUrl, 'high');
+
   return (
     <Paper
       elevation={3}
@@ -59,6 +62,30 @@ const SongDetailPanel: React.FC<SongDetailPanelProps> = ({ song }) => {
       
       {/* Content */}
       <Box sx={{ flex: 1, p: 3, pt: 1 }}>
+        {/* Thumbnail */}
+        {thumbnailUrl && (
+          <Box
+            sx={{
+              width: '100%',
+              maxWidth: 480,
+              mb: 3,
+              borderRadius: 2,
+              overflow: 'hidden',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <img
+              src={thumbnailUrl}
+              alt={song.songName}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+              }}
+            />
+          </Box>
+        )}
+
         {/* Song Name */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

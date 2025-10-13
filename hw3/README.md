@@ -1,7 +1,8 @@
 # 情緒歌單 - Mood Playlist
 
 一個根據情緒分類歌單的網頁應用，使用 React + TypeScript + Material-UI 建立。
-~~有些中文歌的連結可能還是爛的 我很抱歉 可以先用英文歌測試~~
+~~有些中文歌的spotify連結可能還是爛的 我很抱歉 可以用youtube測試跳轉的連結 其他功能應該是好的~~
+-# 因為我沒有用spotify 
 
 ## 功能特色
 
@@ -21,6 +22,7 @@
 - 🎵 **自訂歌單**: 可以創建個人專屬的歌單，選擇喜愛的歌曲
 - 📋 **歌單選擇器**: 首頁可直接選擇自訂歌單，類似情緒選擇器
 - 🌐 **全局標題**: 所有頁面都有統一的標題欄，包含標題、自訂歌單按鈕和語言切換
+- 🖼️ **影片縮圖**: 自動抓取 YouTube 影片縮圖，顯示在歌曲列表和詳情頁面
 
 ## 安裝步驟
 
@@ -119,7 +121,8 @@ src/
 ├── types/                         # TypeScript 型別定義
 │   └── Song.ts
 ├── utils/                         # 工具函數
-│   └── csvParser.ts               # CSV 解析器
+│   ├── csvParser.ts               # CSV 解析器
+│   └── youtubeThumbnail.ts        # YouTube 縮圖工具
 ├── App.tsx                        # 應用入口（路由與主題設定，自動載入CSV）
 └── index.tsx                      # React 入口點
 

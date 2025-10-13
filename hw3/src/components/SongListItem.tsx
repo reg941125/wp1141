@@ -12,6 +12,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PersonIcon from '@mui/icons-material/Person';
 import { Song } from '../types/Song';
+import { getYouTubeThumbnail } from '../utils/youtubeThumbnail';
 
 interface SongListItemProps {
   song: Song;
@@ -32,6 +33,8 @@ const SongListItem: React.FC<SongListItemProps> = ({
     e.stopPropagation();
     onPlay();
   };
+
+  const thumbnailUrl = getYouTubeThumbnail(song.youtubeUrl, 'medium');
 
   return (
     <ListItem
@@ -64,6 +67,36 @@ const SongListItem: React.FC<SongListItemProps> = ({
             <PlayArrowIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </ListItemIcon>
+
+        {/* Thumbnail */}
+        <Box
+          sx={{
+            width: 60,
+            height: 45,
+            mr: 2,
+            borderRadius: 1,
+            overflow: 'hidden',
+            flexShrink: 0,
+            backgroundColor: 'rgba(255, 138, 101, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {thumbnailUrl ? (
+            <img
+              src={thumbnailUrl}
+              alt={song.songName}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <MusicNoteIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+          )}
+        </Box>
 
         {/* Song Info */}
         <ListItemText
