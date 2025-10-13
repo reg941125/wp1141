@@ -3,6 +3,8 @@
 一個根據情緒分類歌單的網頁應用，使用 React + TypeScript + Material-UI 建立。
 ~~有些中文歌的spotify連結可能還是爛的 我很抱歉 可以用youtube測試跳轉的連結 其他功能應該是好的~~
 -# 因為我沒有用spotify 
+如果打不開可以直接用這個連結 https://wp1141hw3.vercel.app/
+[chat history](cursor_.md)
 
 ## 功能特色
 
