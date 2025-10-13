@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoodSelector from '../components/MoodSelector';
+import CustomPlaylistSelector from '../components/CustomPlaylistSelector';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Language } from '../types/Song';
 
@@ -26,6 +27,10 @@ const HomePage: React.FC<HomePageProps> = ({
 
   const handleMoodSelect = (mood: string) => {
     navigate(`/playlist/${encodeURIComponent(mood)}`);
+  };
+
+  const handlePlaylistSelect = (playlistId: string) => {
+    navigate(`/custom-playlist/${playlistId}`);
   };
 
   return (
@@ -71,10 +76,11 @@ const HomePage: React.FC<HomePageProps> = ({
           </Typography>
         </Box>
 
+
         {/* Mood Selection */}
         {moods.length > 0 ? (
           <Fade in={true} timeout={1000}>
-            <Box sx={{ py: 4 }}>
+            <Box sx={{ mb: 6 }}>
               <MoodSelector
                 moods={moods}
                 selectedMood=""
@@ -83,12 +89,19 @@ const HomePage: React.FC<HomePageProps> = ({
             </Box>
           </Fade>
         ) : (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Box sx={{ textAlign: 'center', py: 8, mb: 6 }}>
             <Typography variant="h6" color="text.secondary">
               載入歌曲中...
             </Typography>
           </Box>
         )}
+
+        {/* Custom Playlist Selection */}
+        <Fade in={true} timeout={1000}>
+          <Box>
+            <CustomPlaylistSelector onPlaylistSelect={handlePlaylistSelect} />
+          </Box>
+        </Fade>
       </Container>
     </Box>
   );

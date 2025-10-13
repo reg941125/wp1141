@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import HomePage from './pages/HomePage';
 import PlaylistPage from './pages/PlaylistPage';
+import CustomPlaylistPage from './pages/CustomPlaylistPage';
+import CustomPlaylistPlayerPage from './pages/CustomPlaylistPlayerPage';
 import LanguageSelectionDialog from './components/LanguageSelectionDialog';
 import { Song, Language } from './types/Song';
 import { parseCSV, getMoodsFromSongs } from './utils/csvParser';
@@ -136,31 +138,45 @@ function App() {
           onSelect={handleLanguageSelect}
         />
 
-        {/* Routes */}
-        {selectedLanguage && !loading && (
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <HomePage
-                  moods={moods}
-                  selectedLanguage={selectedLanguage}
-                  onLanguageChange={handleLanguageChange}
-                />
-              }
-            />
-            <Route
-              path="/playlist/:mood"
-              element={
-                <PlaylistPage
-                  songs={songs}
-                  selectedLanguage={selectedLanguage}
-                  onLanguageChange={handleLanguageChange}
-                />
-              }
-            />
-          </Routes>
-        )}
+                {/* Routes */}
+                {selectedLanguage && !loading && (
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <HomePage
+                          moods={moods}
+                          selectedLanguage={selectedLanguage}
+                          onLanguageChange={handleLanguageChange}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/playlist/:mood"
+                      element={
+                        <PlaylistPage
+                          songs={songs}
+                          selectedLanguage={selectedLanguage}
+                          onLanguageChange={handleLanguageChange}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/custom-playlist"
+                      element={
+                        <CustomPlaylistPage
+                          songs={songs}
+                          selectedLanguage={selectedLanguage}
+                          onLanguageChange={handleLanguageChange}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/custom-playlist/:playlistId"
+                      element={<CustomPlaylistPlayerPage />}
+                    />
+                  </Routes>
+                )}
       </Router>
     </ThemeProvider>
   );
