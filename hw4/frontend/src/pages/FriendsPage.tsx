@@ -22,10 +22,6 @@ import {
   Tab,
   Alert,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -71,7 +67,6 @@ const FriendsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchFriendsData();
@@ -107,7 +102,6 @@ const FriendsPage: React.FC = () => {
       const response = await friendAPI.searchUsers(searchQuery);
       if (response.success) {
         setSearchResults(response.data || []);
-        setSearchDialogOpen(true);
       }
     } catch (err) {
       setError('搜尋用戶時發生錯誤');
@@ -122,8 +116,8 @@ const FriendsPage: React.FC = () => {
       const response = await friendAPI.sendRequest({ friend_id: friendId });
       if (response.success) {
         fetchFriendsData();
-        setSearchDialogOpen(false);
         setSearchQuery('');
+        setSearchResults([]);
       }
     } catch (err) {
       setError('發送好友請求時發生錯誤');
@@ -176,12 +170,6 @@ const FriendsPage: React.FC = () => {
           </Typography>
           <IconButton
             color="inherit"
-            onClick={() => setSearchDialogOpen(true)}
-          >
-            <SearchIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
             onClick={() => navigate('/')}
           >
             <HomeIcon />
@@ -201,6 +189,7 @@ const FriendsPage: React.FC = () => {
             <Tab label="好友列表" />
             <Tab label="好友請求" />
             <Tab label="好友動態" />
+            <Tab label="搜尋用戶" />
           </Tabs>
         </Box>
 
@@ -377,13 +366,14 @@ const FriendsPage: React.FC = () => {
             </Box>
           )}
         </TabPanel>
-      </Container>
 
-      {/* 搜尋用戶對話框 */}
-      <Dialog open={searchDialogOpen} onClose={() => setSearchDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>搜尋用戶</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        {/* 搜尋用戶 */}
+        <TabPanel value={tabValue} index={3}>
+          <Typography variant="h6" gutterBottom>
+            搜尋用戶
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
             <TextField
               fullWidth
               label="搜尋用戶"
@@ -404,7 +394,7 @@ const FriendsPage: React.FC = () => {
           {searchResults.length > 0 ? (
             <List>
               {searchResults.map((user) => (
-                <ListItem key={user.id}>
+                <ListItem key={user.id} divider>
                   <ListItemAvatar>
                     <Avatar>
                       {user.username.charAt(0).toUpperCase()}
@@ -426,15 +416,21 @@ const FriendsPage: React.FC = () => {
               ))}
             </List>
           ) : searchQuery && !loading ? (
-            <Typography color="text.secondary" textAlign="center" py={2}>
-              沒有找到用戶
-            </Typography>
+            <Box textAlign="center" py={4}>
+              <Typography color="text.secondary">
+                沒有找到用戶
+              </Typography>
+            </Box>
+          ) : !searchQuery ? (
+            <Box textAlign="center" py={4}>
+              <Typography color="text.secondary">
+                輸入用戶名稱或電子郵件來搜尋
+              </Typography>
+            </Box>
           ) : null}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSearchDialogOpen(false)}>關閉</Button>
-        </DialogActions>
-      </Dialog>
+        </TabPanel>
+      </Container>
+
     </Box>
   );
 };

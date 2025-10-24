@@ -82,7 +82,15 @@ const MapPage: React.FC = () => {
   }, []);
 
   return (
-    <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ 
+      width: '100vw', 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden'
+    }}>
       <AppBar position="static">
         <Toolbar>
           <IconButton
@@ -127,17 +135,22 @@ const MapPage: React.FC = () => {
         </Alert>
       )}
 
-      <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
+      <Box sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        overflow: 'hidden',
+        width: '100%'
+      }}>
         {/* 篩選面板 - 響應式寬度 */}
         <Box sx={{ 
-          width: { xs: '100%', sm: '100%', md: '100%', lg: 320 },
-          minWidth: { md: 280 },
-          maxWidth: { xs: '100%', sm: '100%', md: '100%' },
-          p: { xs: 1, sm: 2 },
+          width: { xs: 0, sm: 0, md: 320, lg: 320 },
+          minWidth: { md: 320 },
+          maxWidth: { md: 320 },
+          p: { xs: 0, sm: 0, md: 2 },
           overflow: 'auto', 
           borderRight: { xs: 0, md: 1 }, 
           borderColor: 'divider',
-          display: { xs: 'none', md: 'block' } // 在小螢幕上隱藏
+          display: { xs: 'none', sm: 'none', md: 'block' }
         }}>
           <FilterPanel
             filters={filters}
@@ -150,7 +163,8 @@ const MapPage: React.FC = () => {
         <Box sx={{ 
           flexGrow: 1, 
           position: 'relative',
-          minHeight: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 64px)' }
+          width: '100%',
+          height: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 64px)' }
         }}>
           <MapView
             onRestroomSelect={handleRestroomSelect}

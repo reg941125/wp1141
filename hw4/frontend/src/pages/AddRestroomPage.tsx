@@ -34,6 +34,31 @@ import { RestroomCreate } from '../types';
 import { restroomAPI } from '../services/api';
 import LocationPicker from '../components/Map/LocationPicker';
 
+// 標籤類型中英文對照
+const getTagTypeLabel = (tagType: string): string => {
+  const tagTypeMap: { [key: string]: string } = {
+    'bidet': '免治馬桶',
+    'lighting': '照明',
+    'smell': '氣味',
+    'accessibility': '無障礙',
+    'tissue_supply': '衛生紙供應',
+    '24_hour_open': '24小時開放',
+    'cleanliness': '清潔度',
+    'privacy': '隱私性',
+    'ventilation': '通風',
+    'water_pressure': '水壓',
+    'soap_supply': '洗手乳供應',
+    'hand_dryer': '烘手機',
+    'mirror': '鏡子',
+    'baby_changing': '嬰兒換尿布台',
+    'gender_neutral': '性別友善',
+    'free': '免費',
+    'paid': '付費'
+  };
+  
+  return tagTypeMap[tagType] || tagType;
+};
+
 const AddRestroomPage: React.FC = () => {
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
@@ -348,7 +373,7 @@ const AddRestroomPage: React.FC = () => {
                       {formData.tags.map((tag, index) => (
                         <Chip
                           key={index}
-                          label={`${tag.tag_type}: ${tag.tag_value}`}
+                          label={`${getTagTypeLabel(tag.tag_type)}: ${tag.tag_value}`}
                           onDelete={() => handleTagChange(tag.tag_type, '')}
                           color="primary"
                           variant="outlined"

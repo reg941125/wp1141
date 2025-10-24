@@ -23,16 +23,47 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Home as HomeIcon,
   Send as SendIcon,
   Star as StarIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { Restroom } from '../types';
 import { restroomAPI, commentAPI } from '../services/api';
+
+// 標籤類型中英文對照
+const getTagTypeLabel = (tagType: string): string => {
+  const tagTypeMap: { [key: string]: string } = {
+    'bidet': '免治馬桶',
+    'lighting': '照明',
+    'smell': '氣味',
+    'accessibility': '無障礙',
+    'tissue_supply': '衛生紙供應',
+    '24_hour_open': '24小時開放',
+    'cleanliness': '清潔度',
+    'privacy': '隱私性',
+    'ventilation': '通風',
+    'water_pressure': '水壓',
+    'soap_supply': '洗手乳供應',
+    'hand_dryer': '烘手機',
+    'mirror': '鏡子',
+    'baby_changing': '嬰兒換尿布台',
+    'gender_neutral': '性別友善',
+    'free': '免費',
+    'paid': '付費'
+  };
+  
+  return tagTypeMap[tagType] || tagType;
+};
 
 const RestroomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +74,12 @@ const RestroomDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState<number>(0);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hasUserRated, setHasUserRated] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -58,6 +94,18 @@ const RestroomDetailPage: React.FC = () => {
       const response = await restroomAPI.getById(parseInt(id!));
       if (response.success && response.data) {
         setRestroom(response.data);
+        
+        // 檢查用戶是否已經評過分
+        if (user && response.data.ratings) {
+          const userRatingData = response.data.ratings.find(
+            (rating: any) => rating.user_id === user.id
+          );
+          if (userRatingData) {
+            setUserRating(userRatingData.rating);
+            setHasUserRated(true);
+            setNewRating(userRatingData.rating);
+          }
+        }
       } else {
         setError('Failed to fetch restroom details');
       }
@@ -93,7 +141,8 @@ const RestroomDetailPage: React.FC = () => {
       setSubmitting(true);
       const response = await commentAPI.rate(restroom.id, { rating: newRating });
       if (response.success) {
-        setNewRating(0);
+        setUserRating(newRating);
+        setHasUserRated(true);
         fetchRestroom(); // Refresh to get updated rating
       }
     } catch (err) {
@@ -102,6 +151,29 @@ const RestroomDetailPage: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  const handleDeleteRestroom = async () => {
+    if (!restroom) return;
+
+    try {
+      setDeleting(true);
+      const response = await restroomAPI.delete(restroom.id);
+      if (response.success) {
+        navigate('/map');
+      } else {
+        setError('刪除廁所失敗');
+      }
+    } catch (err) {
+      console.error('Error deleting restroom:', err);
+      setError('刪除廁所時發生錯誤');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  // 檢查是否為廁所創建者
+  const isCreator = user && restroom && user.id === restroom.creator_id;
 
   if (loading) {
     return (
@@ -235,7 +307,7 @@ const RestroomDetailPage: React.FC = () => {
                       {restroom.tags.map((tag, index) => (
                         <Chip
                           key={index}
-                          label={`${tag.tag_type}: ${tag.tag_value}`}
+                          label={`${getTagTypeLabel(tag.tag_type)}: ${tag.tag_value}`}
                           color="primary"
                           variant="outlined"
                         />
@@ -341,28 +413,64 @@ const RestroomDetailPage: React.FC = () => {
               <Card sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    評分這個廁所
+                    {hasUserRated ? '我的評分' : '評分這個廁所'}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Box 
+                    sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                  >
                     <Rating
-                      value={newRating}
+                      value={hasUserRated && !isHovering ? userRating : newRating}
                       onChange={(_, value) => setNewRating(value || 0)}
                       size="large"
+                      readOnly={hasUserRated && !isHovering}
                     />
-                    {newRating > 0 && (
+                    {(hasUserRated && !isHovering) ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {userRating} 星
+                      </Typography>
+                    ) : newRating > 0 ? (
                       <Typography variant="body2" color="text.secondary">
                         {newRating} 星
                       </Typography>
-                    )}
+                    ) : null}
                   </Box>
+                  {(!hasUserRated || isHovering) && (
+                    <Button
+                      variant="contained"
+                      startIcon={<StarIcon />}
+                      onClick={handleSubmitRating}
+                      disabled={!newRating || submitting}
+                      fullWidth
+                    >
+                      {hasUserRated ? '更新評分' : '提交評分'}
+                    </Button>
+                  )}
+                  {hasUserRated && !isHovering && (
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                      滑鼠移上來修改評分
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 刪除廁所 */}
+            {isCreator && (
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="error">
+                    管理廁所
+                  </Typography>
                   <Button
-                    variant="contained"
-                    startIcon={<StarIcon />}
-                    onClick={handleSubmitRating}
-                    disabled={!newRating || submitting}
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setDeleteDialogOpen(true)}
                     fullWidth
                   >
-                    提交評分
+                    刪除廁所
                   </Button>
                 </CardContent>
               </Card>
@@ -390,6 +498,40 @@ const RestroomDetailPage: React.FC = () => {
           </Grid>
         </Grid>
       </Container>
+
+      {/* 刪除確認對話框 */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          確認刪除廁所
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            您確定要刪除「{restroom?.name}」這個廁所嗎？此操作無法復原，所有相關的評論和評分也會被刪除。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={deleting}
+          >
+            取消
+          </Button>
+          <Button 
+            onClick={handleDeleteRestroom}
+            color="error"
+            variant="contained"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {deleting ? '刪除中...' : '確認刪除'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -8,12 +8,16 @@ import { getMarkerSize } from '../../services/googleMaps';
 interface RestroomMarkerProps {
   restroom: Restroom;
   onClick: () => void;
+  onHover?: () => void;
+  onLeave?: () => void;
   isSelected?: boolean;
 }
 
 const RestroomMarker: React.FC<RestroomMarkerProps> = ({ 
   restroom, 
-  onClick
+  onClick,
+  onHover,
+  onLeave
 }) => {
   const [showInfoWindow, setShowInfoWindow] = useState(false);
 
@@ -33,6 +37,8 @@ const RestroomMarker: React.FC<RestroomMarkerProps> = ({
       <Marker
         position={{ lat: restroom.latitude, lng: restroom.longitude }}
         onClick={handleMarkerClick}
+        onMouseOver={onHover}
+        onMouseOut={onLeave}
         icon={{
           url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg width="${markerSize.width}" height="${markerSize.height}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

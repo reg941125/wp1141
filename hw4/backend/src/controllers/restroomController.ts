@@ -218,8 +218,8 @@ export const createRestroom = async (req: Request, res: Response) => {
       });
     }
 
-    const restroomData: RestroomCreate = req.body;
-    const { name, address, description, picture_url, tags } = restroomData;
+    const restroomData: RestroomCreate & { latitude?: number; longitude?: number } = req.body;
+    const { name, address, description, picture_url, tags, latitude, longitude } = restroomData;
 
     // Validate input
     if (!name || !address) {
@@ -229,15 +229,45 @@ export const createRestroom = async (req: Request, res: Response) => {
       });
     }
 
-    // Geocode address
-    const geocodeResult = await GoogleMapsService.geocodeAddress(address);
-    
-    // Check if location is near NTU
-    if (!GoogleMapsService.isNearNTU(geocodeResult.latitude, geocodeResult.longitude)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Location must be within 2km of National Taiwan University'
-      });
+    let finalLatitude: number;
+    let finalLongitude: number;
+    let finalAddress: string;
+
+    // If coordinates are provided directly (from map selection), use them
+    if (latitude && longitude) {
+      finalLatitude = latitude;
+      finalLongitude = longitude;
+      finalAddress = address;
+      
+      // Check if location is near NTU
+      if (!GoogleMapsService.isNearNTU(finalLatitude, finalLongitude)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Location must be within 2km of National Taiwan University'
+        });
+      }
+    } else {
+      // Geocode address if coordinates not provided
+      try {
+        const geocodeResult = await GoogleMapsService.geocodeAddress(address);
+        finalLatitude = geocodeResult.latitude;
+        finalLongitude = geocodeResult.longitude;
+        finalAddress = geocodeResult.formatted_address;
+        
+        // Check if location is near NTU
+        if (!GoogleMapsService.isNearNTU(finalLatitude, finalLongitude)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Location must be within 2km of National Taiwan University'
+          });
+        }
+      } catch (geocodeError) {
+        console.error('Geocoding error:', geocodeError);
+        return res.status(400).json({
+          success: false,
+          error: 'Unable to find the specified address. Please check the address or try selecting a location on the map.'
+        });
+      }
     }
 
     // Create restroom
@@ -248,9 +278,9 @@ export const createRestroom = async (req: Request, res: Response) => {
 
     const result = stmt.run(
       name,
-      geocodeResult.formatted_address,
-      geocodeResult.latitude,
-      geocodeResult.longitude,
+      finalAddress,
+      finalLatitude,
+      finalLongitude,
       description || null,
       userId,
       picture_url || null

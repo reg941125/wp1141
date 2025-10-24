@@ -8,9 +8,11 @@
 - 🗺️ **互動式地圖**：使用 Google Maps 顯示廁所位置
 - 🔍 **智能搜尋**：根據位置、評分、標籤篩選廁所
 - ➕ **新增廁所**：用戶可以新增新的廁所資訊
+- 🗑️ **刪除廁所**：創建者可以刪除自己新增的廁所
 - ⭐ **評分系統**：1-5 星評分和評論功能
 - 🏷️ **標籤系統**：免治馬桶、無障礙設施、24小時開放等標籤
 - 👥 **好友系統**：添加好友、查看好友動態
+- 🖱️ **懸停預覽**：滑鼠懸停顯示廁所詳細信息
 - 📱 **響應式設計**：支援手機、平板、桌面裝置
 
 ### 技術特色
@@ -112,16 +114,43 @@ VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 
 ### 3. 啟動應用程式
 
-#### 啟動後端
+#### 方法一：分別啟動（開發模式）
 ```bash
+# 啟動後端
 cd backend
+npm run dev
+
+# 啟動前端（新開終端）
+cd frontend
 npm run dev
 ```
 
-#### 啟動前端
+#### 方法二：一次建置和啟動（推薦）
 ```bash
-cd frontend
-npm run dev
+# Windows
+start.bat
+
+# Linux/Mac
+./start.sh
+```
+
+#### 方法三：手動一次啟動
+```bash
+# 建置後端
+cd backend
+npm run build
+
+# 建置前端
+cd ../frontend
+npm run build
+
+# 啟動後端（背景運行）
+cd ../backend
+npm start &
+
+# 啟動前端
+cd ../frontend
+npm run preview
 ```
 
 ### 4. 訪問應用程式

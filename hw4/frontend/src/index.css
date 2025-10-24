@@ -1,0 +1,34 @@
+/* 全域樣式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 確保 Material-UI 組件沒有預設邊距 */
+.MuiBox-root {
+  box-sizing: border-box;
+}
+
+/* 移除可能的容器限制 */
+.MuiContainer-root {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+

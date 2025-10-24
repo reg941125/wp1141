@@ -114,6 +114,16 @@ export const getMarkerIcon = (rating?: number): string => {
   return '🔴'; // Red for poor
 };
 
+// Get marker emoji based on rating
+export const getMarkerEmoji = (rating?: number): string => {
+  if (!rating) return '🚽'; // Default toilet emoji
+  
+  if (rating >= 4.5) return '🚽✨'; // Excellent toilet
+  if (rating >= 3.5) return '🚽👍'; // Good toilet
+  if (rating >= 2.5) return '🚽'; // Average toilet
+  return '🚽⚠️'; // Poor toilet
+};
+
 // Get marker size based on rating
 export const getMarkerSize = (rating?: number): { width: number; height: number } => {
   if (!rating) return { width: 30, height: 30 };
