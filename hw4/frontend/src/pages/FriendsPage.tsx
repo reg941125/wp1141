@@ -338,9 +338,16 @@ const FriendsPage: React.FC = () => {
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      activity.type === 'restroom_added' 
-                        ? `新增了廁所：${activity.data.name}`
-                        : `評論了廁所：${activity.data.restroom_name}`
+                      <>
+                        <Typography component="span" fontWeight="bold" color="primary">
+                          {activity.username || '未知用戶'}
+                        </Typography>
+                        {' '}
+                        {activity.type === 'restroom_added' 
+                          ? `新增了廁所：${activity.data.name}`
+                          : `評論了廁所：${activity.data.restroom_name}`
+                        }
+                      </>
                     }
                     secondary={
                       <Box>

@@ -13,16 +13,31 @@ export const getFriends = async (req: Request, res: Response) => {
     }
 
     const friends = db.prepare(`
-      SELECT f.*, u.username, u.email, u.created_at
+      SELECT f.*, u.username, u.email, u.created_at as user_created_at
       FROM friendships f
       LEFT JOIN users u ON f.friend_id = u.id
       WHERE f.user_id = ? AND f.status = 'accepted'
       ORDER BY f.created_at DESC
-    `).all(userId) as (Friendship & User)[];
+    `).all(userId) as (Friendship & { username: string; email: string; user_created_at: string })[];
+
+    // Transform the data to match frontend expectations
+    const transformedFriends = friends.map(f => ({
+      id: f.id,
+      user_id: f.user_id,
+      friend_id: f.friend_id,
+      status: f.status,
+      created_at: f.created_at,
+      friend: {
+        id: f.friend_id,
+        username: f.username,
+        email: f.email,
+        created_at: f.user_created_at
+      }
+    }));
 
     res.json({
       success: true,
-      data: friends
+      data: transformedFriends
     });
   } catch (error) {
     console.error('Get friends error:', error);
@@ -43,23 +58,53 @@ export const getFriendRequests = async (req: Request, res: Response) => {
       });
     }
 
-    // Get incoming friend requests
-    const incomingRequests = db.prepare(`
-      SELECT f.*, u.username, u.email
+    // Get incoming friend requests (others requesting me)
+    const incomingRaw = db.prepare(`
+      SELECT f.*, u.username, u.email, u.created_at as user_created_at
       FROM friendships f
       LEFT JOIN users u ON f.user_id = u.id
       WHERE f.friend_id = ? AND f.status = 'pending'
       ORDER BY f.created_at DESC
-    `).all(userId) as (Friendship & { username: string; email: string })[];
+    `).all(userId) as (Friendship & { username: string; email: string; user_created_at: string })[];
 
-    // Get outgoing friend requests
-    const outgoingRequests = db.prepare(`
-      SELECT f.*, u.username, u.email
+    // Get outgoing friend requests (me requesting others)
+    const outgoingRaw = db.prepare(`
+      SELECT f.*, u.username, u.email, u.created_at as user_created_at
       FROM friendships f
       LEFT JOIN users u ON f.friend_id = u.id
       WHERE f.user_id = ? AND f.status = 'pending'
       ORDER BY f.created_at DESC
-    `).all(userId) as (Friendship & { username: string; email: string })[];
+    `).all(userId) as (Friendship & { username: string; email: string; user_created_at: string })[];
+
+    // Transform incoming requests
+    const incomingRequests = incomingRaw.map(f => ({
+      id: f.id,
+      user_id: f.user_id,
+      friend_id: f.friend_id,
+      status: f.status,
+      created_at: f.created_at,
+      friend: {
+        id: f.user_id,
+        username: f.username,
+        email: f.email,
+        created_at: f.user_created_at
+      }
+    }));
+
+    // Transform outgoing requests
+    const outgoingRequests = outgoingRaw.map(f => ({
+      id: f.id,
+      user_id: f.user_id,
+      friend_id: f.friend_id,
+      status: f.status,
+      created_at: f.created_at,
+      friend: {
+        id: f.friend_id,
+        username: f.username,
+        email: f.email,
+        created_at: f.user_created_at
+      }
+    }));
 
     res.json({
       success: true,
@@ -291,12 +336,14 @@ export const getFriendActivity = async (req: Request, res: Response) => {
       ...recentRestrooms.map((restroom: any) => ({
         type: 'restroom_added',
         data: restroom,
-        created_at: restroom.created_at
+        created_at: restroom.created_at,
+        username: restroom.creator_username
       })),
       ...recentComments.map((comment: any) => ({
         type: 'comment_added',
         data: comment,
-        created_at: comment.created_at
+        created_at: comment.created_at,
+        username: comment.username
       }))
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 

@@ -76,7 +76,6 @@ const RestroomDetailPage: React.FC = () => {
   const [newRating, setNewRating] = useState<number>(0);
   const [userRating, setUserRating] = useState<number>(0);
   const [hasUserRated, setHasUserRated] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -104,6 +103,11 @@ const RestroomDetailPage: React.FC = () => {
             setUserRating(userRatingData.rating);
             setHasUserRated(true);
             setNewRating(userRatingData.rating);
+          } else {
+            // 如果用戶沒有評過分，確保 newRating 為 0
+            setUserRating(0);
+            setHasUserRated(false);
+            setNewRating(0);
           }
         }
       } else {
@@ -417,39 +421,30 @@ const RestroomDetailPage: React.FC = () => {
                   </Typography>
                   <Box 
                     sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
-                    onMouseEnter={() => setIsHovering(true)}
-                    onMouseLeave={() => setIsHovering(false)}
                   >
                     <Rating
-                      value={hasUserRated && !isHovering ? userRating : newRating}
+                      value={newRating}
                       onChange={(_, value) => setNewRating(value || 0)}
                       size="large"
-                      readOnly={hasUserRated && !isHovering}
                     />
-                    {(hasUserRated && !isHovering) ? (
-                      <Typography variant="body2" color="text.secondary">
-                        {userRating} 星
-                      </Typography>
-                    ) : newRating > 0 ? (
+                    {newRating > 0 && (
                       <Typography variant="body2" color="text.secondary">
                         {newRating} 星
                       </Typography>
-                    ) : null}
+                    )}
                   </Box>
-                  {(!hasUserRated || isHovering) && (
-                    <Button
-                      variant="contained"
-                      startIcon={<StarIcon />}
-                      onClick={handleSubmitRating}
-                      disabled={!newRating || submitting}
-                      fullWidth
-                    >
-                      {hasUserRated ? '更新評分' : '提交評分'}
-                    </Button>
-                  )}
-                  {hasUserRated && !isHovering && (
-                    <Typography variant="body2" color="text.secondary" textAlign="center">
-                      滑鼠移上來修改評分
+                  <Button
+                    variant="contained"
+                    startIcon={<StarIcon />}
+                    onClick={handleSubmitRating}
+                    disabled={!newRating || submitting}
+                    fullWidth
+                  >
+                    {hasUserRated ? '更新評分' : '提交評分'}
+                  </Button>
+                  {hasUserRated && (
+                    <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 1 }}>
+                      您可以隨時修改您的評分
                     </Typography>
                   )}
                 </CardContent>

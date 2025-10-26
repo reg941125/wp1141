@@ -135,6 +135,7 @@ export interface Activity {
   type: 'restroom_added' | 'comment_added';
   data: any;
   created_at: string;
+  username?: string;
 }
 
 // Auth Context types

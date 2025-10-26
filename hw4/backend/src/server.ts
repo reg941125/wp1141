@@ -9,6 +9,7 @@ import authRoutes from './routes/auth';
 import restroomRoutes from './routes/restrooms';
 import commentRoutes from './routes/comments';
 import friendRoutes from './routes/friends';
+import uploadRoutes from './routes/upload';
 
 const app = express();
 
@@ -18,13 +19,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Use path.resolve to handle both development and production modes
+const uploadsPath = path.resolve(__dirname, '..', 'uploads');
+console.log('📁 Uploads directory:', uploadsPath);
+app.use('/uploads', express.static(uploadsPath));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/restrooms', restroomRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

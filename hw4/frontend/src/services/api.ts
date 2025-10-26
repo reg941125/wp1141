@@ -166,4 +166,25 @@ export const friendAPI = {
   },
 };
 
+// Upload API
+export const uploadAPI = {
+  uploadImage: async (file: File): Promise<ApiResponse<{ url: string; filename: string }>> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/upload/image`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+    
+    return response.data;
+  },
+};
+
 export default api;

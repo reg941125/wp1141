@@ -31,7 +31,7 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 import { RestroomCreate } from '../types';
-import { restroomAPI } from '../services/api';
+import { restroomAPI, uploadAPI } from '../services/api';
 import LocationPicker from '../components/Map/LocationPicker';
 
 // 標籤類型中英文對照
@@ -74,6 +74,8 @@ const AddRestroomPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
 
   const tagOptions = [
     { type: 'bidet', label: '免治馬桶', values: ['有', '無'] },
@@ -106,6 +108,30 @@ const AddRestroomPage: React.FC = () => {
       }
       return { ...prev, tags: newTags };
     });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setError(null);
+      
+      const response = await uploadAPI.uploadImage(file);
+      if (response.success && response.data) {
+        const fullUrl = `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${response.data.url}`;
+        setUploadedImageUrl(fullUrl);
+        setFormData(prev => ({ ...prev, picture_url: fullUrl }));
+      } else {
+        setError('圖片上傳失敗');
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError('圖片上傳時發生錯誤');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -323,14 +349,39 @@ const AddRestroomPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="照片網址"
-                    value={formData.picture_url || ''}
-                    onChange={(e) => handleInputChange('picture_url', e.target.value)}
-                    placeholder="https://example.com/photo.jpg"
-                    helperText="可選：上傳廁所照片的網址"
+                  <Typography variant="subtitle1" gutterBottom>
+                    廁所照片
+                  </Typography>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="upload-image"
+                    type="file"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
                   />
+                  <label htmlFor="upload-image">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      disabled={uploading}
+                      startIcon={uploading ? <CircularProgress size={20} /> : undefined}
+                    >
+                      {uploading ? '上傳中...' : '上傳圖片'}
+                    </Button>
+                  </label>
+                  {uploadedImageUrl && (
+                    <Box sx={{ mt: 2 }}>
+                      <img 
+                        src={uploadedImageUrl} 
+                        alt="預覽" 
+                        style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
+                      />
+                    </Box>
+                  )}
+                  <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
+                    可選：上傳廁所照片 (支援 jpeg, jpg, png, gif, webp，最大 5MB)
+                  </Typography>
                 </Grid>
 
                 {/* 標籤 */}

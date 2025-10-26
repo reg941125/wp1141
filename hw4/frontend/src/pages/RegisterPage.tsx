@@ -52,13 +52,23 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
+    <Container 
+      component="main" 
+      maxWidth="sm"
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+      }}
+    >
       <Box
         sx={{
-          marginTop: 8,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          width: '90%',
+          maxWidth: 400,
         }}
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
