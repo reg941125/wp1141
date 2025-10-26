@@ -197,10 +197,6 @@ temp.sqlite
 ehthumbs.db
 Thumbs.db
 
-# Uploads directory (if you have file uploads)
-uploads/
-public/uploads/
-
 # Backup files
 *.bak
 *.backup
