@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String?   @unique
+  emailVerified  DateTime?
+  name           String?
+  userId         String?   @unique
+  image          String?
+  bio            String?
+  coverImage     String?
+  hashedPassword String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  accounts       Account[]
+  sessions       Session[]
+  
+  followers      Follow[]  @relation("UserFollowers")
+  following      Follow[]  @relation("UserFollowing")
+  
+  posts          Post[]
+  comments       Comment[]
+  likes          Like[]
+  reposts        Repost[]
+  drafts         Draft[]
+  
+  notifications  Notification[] @relation("NotificationRecipient")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  @@unique([followerId, followingId])
+}
+
+model Post {
+  id           String    @id @default(cuid())
+  content      String    @db.Text
+  authorId     String
+  authorName   String
+  authorImage String?
+  authorUserId String
+  image        String?
+  createdAt    DateTime  @default(now())
+  
+  author       User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+  likes        Like[]
+  reposts      Repost[]
+  
+  @@index([authorId])
+  @@index([authorUserId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id           String   @id @default(cuid())
+  content      String   @db.Text
+  authorId     String
+  authorName   String
+  authorImage String?
+  authorUserId String
+  postId       String
+  parentCommentId String? // For recursive comments
+  createdAt    DateTime @default(now())
+  
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent       Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies      Comment[] @relation("CommentReplies")
+  
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([parentCommentId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Repost {
+  id           String   @id @default(cuid())
+  userId       String
+  authorUserId String
+  postId       String
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // 'like', 'repost', 'comment', 'follow', 'mention'
+  fromUserId  String
+  fromUserName String
+  fromUserImage String?
+  fromUserUserId String
+  toUserId    String   // 接收通知的用戶
+  postId      String?
+  commentId   String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  toUser      User     @relation("NotificationRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  
+  @@index([toUserId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model Draft {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  image     String?
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@index([authorId])
+  @@index([createdAt])
+}
