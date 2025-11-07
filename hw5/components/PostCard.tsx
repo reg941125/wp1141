@@ -67,10 +67,12 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [isEditingComment, setIsEditingComment] = useState<{ [key: string]: boolean }>({});
   const [isDeletingComment, setIsDeletingComment] = useState<{ [key: string]: boolean }>({});
+  const [showCommentMenu, setShowCommentMenu] = useState<{ [key: string]: boolean }>({});
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const deleteMenuRef = useRef<HTMLDivElement>(null);
   const editPostTextareaRef = useRef<HTMLTextAreaElement>(null);
   const editCommentTextareaRefs = useRef<{ [key: string]: React.RefObject<HTMLTextAreaElement | null> }>({});
+  const commentMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Initialize refs for comments
   useEffect(() => {
@@ -129,6 +131,12 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
       if (deleteMenuRef.current && !deleteMenuRef.current.contains(event.target as Node)) {
         setShowDeleteMenu(false);
       }
+      // Close comment menus when clicking outside
+      Object.keys(commentMenuRefs.current).forEach(commentId => {
+        if (commentMenuRefs.current[commentId] && !commentMenuRefs.current[commentId]?.contains(event.target as Node)) {
+          setShowCommentMenu(prev => ({ ...prev, [commentId]: false }));
+        }
+      });
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -599,22 +607,47 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
                           </span>
                         </div>
                         {session?.user?.id === comment.authorId && (
-                          <div className="flex items-center space-x-2">
+                          <div className="relative" ref={(el) => {
+                            if (el) {
+                              commentMenuRefs.current[comment._id] = el;
+                            } else {
+                              delete commentMenuRefs.current[comment._id];
+                            }
+                          }}>
                             <button
-                              onClick={() => handleEditComment(comment)}
+                              onClick={() => setShowCommentMenu(prev => ({
+                                ...prev,
+                                [comment._id]: !prev[comment._id]
+                              }))}
                               className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                              title="編輯"
                             >
-                              <HiPencil className="w-4 h-4 text-gray-500" />
+                              <HiEllipsisHorizontal className="w-4 h-4 text-gray-500" />
                             </button>
-                            <button
-                              onClick={() => handleDeleteComment(comment._id)}
-                              disabled={isDeletingComment[comment._id]}
-                              className="p-1 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50"
-                              title="刪除"
-                            >
-                              <HiTrash className="w-4 h-4 text-red-500" />
-                            </button>
+                            {showCommentMenu[comment._id] && (
+                              <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-10 min-w-[120px]">
+                                <button
+                                  onClick={() => {
+                                    handleEditComment(comment);
+                                    setShowCommentMenu(prev => ({ ...prev, [comment._id]: false }));
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                                >
+                                  <HiPencil className="w-4 h-4" />
+                                  <span>編輯</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowCommentMenu(prev => ({ ...prev, [comment._id]: false }));
+                                    handleDeleteComment(comment._id);
+                                  }}
+                                  disabled={isDeletingComment[comment._id]}
+                                  className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                                >
+                                  <HiTrash className="w-4 h-4" />
+                                  <span>{isDeletingComment[comment._id] ? '刪除中...' : '刪除'}</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
