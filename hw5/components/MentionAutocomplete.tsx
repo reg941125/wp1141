@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 interface User {
   id: string;
@@ -201,12 +200,10 @@ export default function MentionAutocomplete({
               }`}
             >
               {user.image && (
-                <Image
+                <img
                   src={user.image}
                   alt={user.name || user.userId}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
+                  className="w-8 h-8 rounded-full"
                 />
               )}
               <div className="flex-1 text-left">

@@ -2,8 +2,10 @@
  * Convert URLs in text to clickable links
  * Also handles hashtags and mentions
  */
-export function formatTextWithLinks(text: string): (string | JSX.Element)[] {
-  const parts: (string | JSX.Element)[] = [];
+import React from 'react';
+
+export function formatTextWithLinks(text: string): (string | React.ReactElement)[] {
+  const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
 
   // Combined regex for URLs, mentions, and hashtags

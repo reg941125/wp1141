@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 interface TextWithMentionsProps {
   text: string;
@@ -11,7 +12,7 @@ export default function TextWithMentions({ text }: TextWithMentionsProps) {
 
   // Combined regex for URLs, mentions, and hashtags
   const combinedRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|@\w+|#\w+)/g;
-  const parts: (string | JSX.Element)[] = [];
+  const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
   let match;
 

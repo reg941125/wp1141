@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { HiTrash } from 'react-icons/hi2';
 
 const ADMIN_KEY = 'regp0o9i8u7';
@@ -154,12 +153,10 @@ export default function AdminPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             {user.image ? (
-                              <Image
+                              <img
                                 src={user.image}
                                 alt={user.name || 'User'}
-                                width={40}
-                                height={40}
-                                className="rounded-full"
+                                className="w-10 h-10 rounded-full"
                               />
                             ) : (
                               <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
 import { HiArrowLeft, HiChatBubbleLeft } from 'react-icons/hi2';
 import FollowButton from '@/components/FollowButton';
 import EditProfileDialog from '@/components/EditProfileDialog';
@@ -219,11 +218,10 @@ export default function ProfilePage() {
       {/* Cover Image */}
       <div className="relative h-64 bg-gray-200">
         {user.coverImage && (
-          <Image
+          <img
             src={user.coverImage}
             alt="Cover"
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
           />
         )}
       </div>
@@ -235,12 +233,10 @@ export default function ProfilePage() {
           <div className="relative">
             <div className="w-32 h-32 rounded-full bg-white p-1">
               {user.image && (
-                <Image
+                <img
                   src={user.image}
                   alt={user.name}
-                  width={128}
-                  height={128}
-                  className="rounded-full"
+                  className="w-full h-full rounded-full"
                 />
               )}
             </div>
@@ -413,12 +409,10 @@ export default function ProfilePage() {
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-start space-x-2">
                         {comment.post.authorImage && (
-                          <Image
+                          <img
                             src={comment.post.authorImage}
                             alt={comment.post.authorName}
-                            width={32}
-                            height={32}
-                            className="rounded-full cursor-pointer"
+                            className="w-8 h-8 rounded-full cursor-pointer"
                             onClick={() => router.push(`/profile/${comment.post?.authorUserId}`)}
                           />
                         )}
@@ -442,12 +436,10 @@ export default function ProfilePage() {
                   {/* Comment Content */}
                   <div className="flex items-start space-x-3">
                     {comment.authorImage && (
-                      <Image
+                      <img
                         src={comment.authorImage}
                         alt={comment.authorName}
-                        width={48}
-                        height={48}
-                        className="rounded-full cursor-pointer"
+                        className="w-12 h-12 rounded-full cursor-pointer"
                         onClick={() => router.push(`/profile/${comment.authorUserId}`)}
                       />
                     )}

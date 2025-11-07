@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { HiHome, HiUser, HiPlus, HiBell, HiDocumentText } from 'react-icons/hi';
 import PostDialog from './PostDialog';
-import Image from 'next/image';
 
 export default function Sidebar() {
   const { data: session } = useSession();
@@ -147,12 +146,10 @@ export default function Sidebar() {
               className="flex items-center space-x-3 w-full rounded-full p-3 hover:bg-gray-100 transition-colors"
             >
               {session.user.image && (
-                <Image
+                <img
                   src={session.user.image}
                   alt={session.user.name || 'User'}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
+                  className="w-10 h-10 rounded-full"
                 />
               )}
               <div className="flex-1 text-left">

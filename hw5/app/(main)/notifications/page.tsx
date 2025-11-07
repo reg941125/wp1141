@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { HiArrowLeft, HiHeart, HiArrowPathRoundedSquare, HiChatBubbleLeft, HiUser, HiAtSymbol } from 'react-icons/hi2';
-import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
@@ -184,12 +183,10 @@ export default function NotificationsPage() {
             >
               <div className="flex items-start space-x-3">
                 {notification.fromUserImage && (
-                  <Image
+                  <img
                     src={notification.fromUserImage}
                     alt={notification.fromUserName}
-                    width={48}
-                    height={48}
-                    className="rounded-full cursor-pointer flex-shrink-0"
+                    className="w-12 h-12 rounded-full cursor-pointer flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/profile/${notification.fromUserUserId}`);
