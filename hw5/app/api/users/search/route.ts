@@ -21,13 +21,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ users: [] }, { status: 200 });
     }
 
-    // Search users by userId (case-insensitive partial match)
+    // Search users by userId or name (case-insensitive partial match)
     const users = await prisma.user.findMany({
       where: {
-        userId: {
-          contains: query,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            userId: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
       },
       select: {
         id: true,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { HiHome, HiUser, HiPlus, HiBell, HiDocumentText } from 'react-icons/hi';
 import PostDialog from './PostDialog';
+import UserSearch from './UserSearch';
 
 export default function Sidebar() {
   const { data: session } = useSession();
@@ -87,6 +88,11 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="px-4 py-2 mb-4">
             <h1 className="text-2xl font-bold">X</h1>
+          </div>
+
+          {/* User Search */}
+          <div className="px-4 w-full">
+            <UserSearch />
           </div>
 
           {/* Navigation */}
