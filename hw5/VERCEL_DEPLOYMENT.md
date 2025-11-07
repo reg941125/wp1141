@@ -27,13 +27,15 @@ DATABASE_URL=your_postgresql_connection_string
 
 #### NextAuth
 ```
-NEXTAUTH_URL=https://your-domain.vercel.app
+NEXTAUTH_URL=https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app
 NEXTAUTH_SECRET=your_nextauth_secret_key
 ```
 **生成 NEXTAUTH_SECRET**: 
 ```bash
 openssl rand -base64 32
 ```
+
+**重要**: 如果你的 Vercel 專案有自定義域名，請使用自定義域名。否則使用 Vercel 提供的預設域名。
 
 #### OAuth Providers
 
@@ -94,9 +96,45 @@ ADMIN_KEY=regp0o9i8u7
 
 1. **不要提交 `.env` 文件**: `.env` 文件已被 `.gitignore` 忽略
 2. **環境變數名稱**: 確保環境變數名稱與代碼中使用的一致
-3. **NEXTAUTH_URL**: 部署後更新為實際的 Vercel URL
+3. **NEXTAUTH_URL**: 必須設置為 `https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app`
 4. **資料庫連接**: 確保 PostgreSQL 資料庫允許來自 Vercel IP 的連接
-5. **OAuth 回調 URL**: 在 OAuth 提供商的設置中添加 Vercel URL 作為回調 URL
+5. **OAuth 回調 URL**: 在 OAuth 提供商的設置中添加以下回調 URL：
+
+### OAuth 回調 URL 配置
+
+#### Google OAuth
+在 [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → 你的 OAuth 2.0 Client ID
+
+**Authorized redirect URIs** 添加：
+```
+https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app/api/auth/callback/google
+```
+
+#### GitHub OAuth
+在 [GitHub Developer Settings](https://github.com/settings/developers) → OAuth Apps → 你的 App
+
+**Authorization callback URL**:
+```
+https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app/api/auth/callback/github
+```
+
+**Homepage URL**:
+```
+https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app
+```
+
+#### Facebook OAuth
+在 [Facebook Developers](https://developers.facebook.com/) → 你的 App → Settings → Basic
+
+**Valid OAuth Redirect URIs**:
+```
+https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app/api/auth/callback/facebook
+```
+
+**Site URL**:
+```
+https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app
+```
 
 ## 故障排除
 
