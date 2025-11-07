@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { formatDistanceToNow } from 'date-fns';
-import { HiHeart, HiArrowPathRoundedSquare, HiChatBubbleLeft, HiEllipsisHorizontal } from 'react-icons/hi2';
+import { HiHeart, HiArrowPathRoundedSquare, HiChatBubbleLeft, HiEllipsisHorizontal, HiPencil, HiTrash } from 'react-icons/hi2';
+import { calculateCharacterCount } from '@/lib/utils/characterCount';
 import TextWithMentions from './TextWithMentions';
 import MentionAutocomplete from './MentionAutocomplete';
 
@@ -59,8 +60,26 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editPostContent, setEditPostContent] = useState('');
+  const [editCommentContent, setEditCommentContent] = useState<{ [key: string]: string }>({});
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [isEditingComment, setIsEditingComment] = useState<{ [key: string]: boolean }>({});
+  const [isDeletingComment, setIsDeletingComment] = useState<{ [key: string]: boolean }>({});
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const deleteMenuRef = useRef<HTMLDivElement>(null);
+  const editPostTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const editCommentTextareaRefs = useRef<{ [key: string]: React.RefObject<HTMLTextAreaElement | null> }>({});
+
+  // Initialize refs for comments
+  useEffect(() => {
+    comments.forEach(comment => {
+      if (!editCommentTextareaRefs.current[comment._id]) {
+        editCommentTextareaRefs.current[comment._id] = { current: null };
+      }
+    });
+  }, [comments]);
 
   // Check if current user has liked this post
   useEffect(() => {
@@ -195,6 +214,124 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
     }
   };
 
+  const handleEditPost = () => {
+    setEditPostContent(post.content);
+    setEditingPostId(post._id);
+    setIsEditingPost(true);
+    setShowDeleteMenu(false);
+    setTimeout(() => {
+      editPostTextareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleSavePostEdit = async () => {
+    const newCount = calculateCharacterCount(editPostContent);
+    if (!editPostContent.trim() || editPostContent === post.content || newCount > 280) {
+      setIsEditingPost(false);
+      return;
+    }
+
+    setIsEditingPost(false);
+    try {
+      const res = await fetch(`/api/posts/${post._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: editPostContent }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update post content locally
+        post.content = data.post.content;
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error editing post:', error);
+    }
+  };
+
+  const handleCancelPostEdit = () => {
+    setIsEditingPost(false);
+    setEditPostContent('');
+    setEditingPostId(null);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('確定要刪除這則留言嗎？')) return;
+
+    setIsDeletingComment(prev => ({ ...prev, [commentId]: true }));
+    try {
+      const res = await fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setComments(comments.filter(c => c._id !== commentId));
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    } finally {
+      setIsDeletingComment(prev => ({ ...prev, [commentId]: false }));
+    }
+  };
+
+  const handleEditComment = (comment: Comment) => {
+    if (!editCommentTextareaRefs.current[comment._id]) {
+      editCommentTextareaRefs.current[comment._id] = { current: null };
+    }
+    setEditCommentContent(prev => ({ ...prev, [comment._id]: comment.content }));
+    setEditingCommentId(comment._id);
+    setIsEditingComment(prev => ({ ...prev, [comment._id]: true }));
+    setTimeout(() => {
+      editCommentTextareaRefs.current[comment._id]?.current?.focus();
+    }, 0);
+  };
+
+  const handleSaveCommentEdit = async (commentId: string) => {
+    const content = editCommentContent[commentId];
+    if (!content || !content.trim() || content === comments.find(c => c._id === commentId)?.content) {
+      setIsEditingComment(prev => ({ ...prev, [commentId]: false }));
+      setEditingCommentId(null);
+      return;
+    }
+
+    setIsEditingComment(prev => ({ ...prev, [commentId]: false }));
+    try {
+      const res = await fetch(`/api/comments/${commentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setComments(comments.map(c => c._id === commentId ? data.comment : c));
+        setEditingCommentId(null);
+        setEditCommentContent(prev => {
+          const newContent = { ...prev };
+          delete newContent[commentId];
+          return newContent;
+        });
+      }
+    } catch (error) {
+      console.error('Error editing comment:', error);
+    }
+  };
+
+  const handleCancelCommentEdit = (commentId: string) => {
+    setIsEditingComment(prev => ({ ...prev, [commentId]: false }));
+    setEditingCommentId(null);
+    setEditCommentContent(prev => {
+      const newContent = { ...prev };
+      delete newContent[commentId];
+      return newContent;
+    });
+  };
+
   const handlePostClick = () => {
     if (onPostClick) {
       onPostClick();
@@ -257,13 +394,21 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
                   <HiEllipsisHorizontal className="w-5 h-5 text-gray-500" />
                 </button>
                 {showDeleteMenu && (
-                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-10">
+                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-10 min-w-[120px]">
+                    <button
+                      onClick={handleEditPost}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                    >
+                      <HiPencil className="w-4 h-4" />
+                      <span>編輯</span>
+                    </button>
                     <button
                       onClick={handleDeletePost}
                       disabled={isDeleting}
-                      className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center space-x-2"
                     >
-                      {isDeleting ? '刪除中...' : 'Delete'}
+                      <HiTrash className="w-4 h-4" />
+                      <span>{isDeleting ? '刪除中...' : '刪除'}</span>
                     </button>
                   </div>
                 )}
@@ -271,9 +416,53 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
             )}
           </div>
           <div onClick={handlePostClick} className="cursor-pointer">
-            <p className="mt-1 break-words">
-              <TextWithMentions text={post.content} />
-            </p>
+            {isEditingPost && editingPostId === post._id ? (
+              <div className="mt-1">
+                <MentionAutocomplete
+                  value={editPostContent}
+                  onChange={(newContent) => {
+                    const newCount = calculateCharacterCount(newContent);
+                    if (newCount <= 280) {
+                      setEditPostContent(newContent);
+                    }
+                  }}
+                  textareaRef={editPostTextareaRef}
+                  placeholder="編輯貼文..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={4}
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`text-sm ${calculateCharacterCount(editPostContent) > 280 ? 'text-red-500' : 'text-gray-500'}`}>
+                    {calculateCharacterCount(editPostContent)}/280
+                  </span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancelPostEdit();
+                      }}
+                      className="px-4 py-1.5 border border-gray-300 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSavePostEdit();
+                      }}
+                      disabled={!editPostContent.trim() || editPostContent === post.content || calculateCharacterCount(editPostContent) > 280}
+                      className="px-4 py-1.5 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      儲存
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1 break-words">
+                <TextWithMentions text={post.content} />
+              </p>
+            )}
           </div>
           <div className="flex items-center space-x-6 mt-3">
             {/* Comment Button - First */}
@@ -389,28 +578,90 @@ export default function PostCard({ post, showRepostedBy, showLikedBy, isRepost =
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span
-                          className="font-semibold text-sm hover:underline cursor-pointer"
-                          onClick={() =>
-                            router.push(`/profile/${comment.authorUserId}`)
-                          }
-                        >
-                          {comment.authorName}
-                        </span>
-                        <span className="text-gray-500 text-sm">
-                          @{comment.authorUserId}
-                        </span>
-                        <span className="text-gray-500 text-sm">·</span>
-                        <span className="text-gray-500 text-sm">
-                          {formatDistanceToNow(new Date(comment.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span
+                            className="font-semibold text-sm hover:underline cursor-pointer"
+                            onClick={() =>
+                              router.push(`/profile/${comment.authorUserId}`)
+                            }
+                          >
+                            {comment.authorName}
+                          </span>
+                          <span className="text-gray-500 text-sm">
+                            @{comment.authorUserId}
+                          </span>
+                          <span className="text-gray-500 text-sm">·</span>
+                          <span className="text-gray-500 text-sm">
+                            {formatDistanceToNow(new Date(comment.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                        {session?.user?.id === comment.authorId && (
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleEditComment(comment)}
+                              className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                              title="編輯"
+                            >
+                              <HiPencil className="w-4 h-4 text-gray-500" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(comment._id)}
+                              disabled={isDeletingComment[comment._id]}
+                              className="p-1 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50"
+                              title="刪除"
+                            >
+                              <HiTrash className="w-4 h-4 text-red-500" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <p className="mt-1 text-sm break-words">
-                        <TextWithMentions text={comment.content} />
-                      </p>
+                      {isEditingComment[comment._id] && editingCommentId === comment._id ? (
+                        <div className="mt-2">
+                          <MentionAutocomplete
+                            value={editCommentContent[comment._id] || ''}
+                            onChange={(newContent) => {
+                              const newCount = calculateCharacterCount(newContent);
+                              if (newCount <= 280) {
+                                setEditCommentContent(prev => ({
+                                  ...prev,
+                                  [comment._id]: newContent
+                                }));
+                              }
+                            }}
+                            textareaRef={editCommentTextareaRefs.current[comment._id]}
+                            placeholder="編輯留言..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            rows={3}
+                          />
+                          <div className="flex items-center justify-between mt-2">
+                            <span className={`text-xs ${calculateCharacterCount(editCommentContent[comment._id] || '') > 280 ? 'text-red-500' : 'text-gray-500'}`}>
+                              {calculateCharacterCount(editCommentContent[comment._id] || '')}/280
+                            </span>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleCancelCommentEdit(comment._id)}
+                                className="px-3 py-1 text-sm border border-gray-300 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                              >
+                                取消
+                              </button>
+                              <button
+                                onClick={() => handleSaveCommentEdit(comment._id)}
+                                disabled={!editCommentContent[comment._id]?.trim() || editCommentContent[comment._id] === comment.content || calculateCharacterCount(editCommentContent[comment._id] || '') > 280}
+                                className="px-3 py-1 text-sm bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                儲存
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm break-words">
+                          <TextWithMentions text={comment.content} />
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))
