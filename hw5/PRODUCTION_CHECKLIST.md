@@ -73,6 +73,20 @@ NEXTAUTH_URL=https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app
 # 資料庫
 DATABASE_URL=你的_postgresql_連接字串
 
+**重要**：如果使用 Neon，請確保使用 **Connection Pooling** 模式的連接字符串（包含 `-pooler` 的主機名），而不是直接連接。
+
+連接字符串格式範例（Neon）：
+```
+postgresql://user:password@ep-xxx-pooler.us-east-1.aws.neon.tech/dbname?sslmode=require&connection_limit=10&connect_timeout=10
+```
+
+**如何獲取 Neon 連接池字符串**：
+1. 登入 [Neon Console](https://console.neon.tech)
+2. 選擇你的專案
+3. 點擊 **Connection Details**
+4. 選擇 **Connection pooling** → **Transaction mode**
+5. 複製連接字符串
+
 # NextAuth（必須設置）
 NEXTAUTH_URL=https://wp1141hw5xclone-git-main-regchiangs-projects.vercel.app
 NEXTAUTH_SECRET=你的_secret_key（運行 openssl rand -base64 32 生成）
@@ -134,13 +148,37 @@ ADMIN_KEY=regp0o9i8u7
 3. 確認 `NEXTAUTH_URL` 設置為完整的 HTTPS URL（沒有結尾斜線）
 4. 檢查瀏覽器控制台的錯誤訊息
 
-### 資料庫連接失敗
-**症狀**: 頁面顯示錯誤或無法載入數據
+### 資料庫連接失敗（P1002 錯誤）
+**症狀**: 頁面顯示錯誤或無法載入數據，Vercel 構建日誌顯示 `P1002` 錯誤
+
+**錯誤訊息**: `P1002: Can't reach database server` 或 `P1002: Timed out`
 
 **解決方法**:
-1. 確認 `DATABASE_URL` 環境變數已設置
-2. 檢查 Neon 資料庫連接字串是否正確
-3. 確認資料庫允許外部連接（Neon 默認允許）
+1. **確認使用連接池模式**（Neon 必須）
+   - 登入 [Neon Console](https://console.neon.tech)
+   - 選擇你的專案 → Connection Details
+   - 選擇 **Connection pooling** → **Transaction mode**
+   - 複製連接字符串（應包含 `-pooler` 主機名）
+   - 更新 Vercel 環境變數 `DATABASE_URL`
+
+2. **檢查連接字符串格式**
+   - ✅ 應包含 `-pooler`（例如：`ep-xxx-pooler.us-east-1.aws.neon.tech`）
+   - ✅ 應包含 `sslmode=require`
+   - ✅ 建議包含 `connection_limit=10&connect_timeout=10`
+
+3. **確認數據庫狀態**
+   - Neon 免費版會自動暫停（5 分鐘無活動後）
+   - 在 Neon Console 中確認數據庫狀態為 "Active"
+   - 如果暫停，點擊 "Resume" 喚醒數據庫
+
+4. **重新部署**
+   - 更新環境變數後，在 Vercel Dashboard 中重新部署
+   - 查看構建日誌確認錯誤已解決
+
+5. **參考文檔**
+   - 詳細解決方案請參考 `PRISMA_P1002_FIX.md`
+
+### 資料庫連接失敗（其他錯誤）
 
 ### 構建失敗
 **症狀**: Vercel 部署失敗
