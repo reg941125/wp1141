@@ -135,21 +135,50 @@ export default function MentionAutocomplete({
 
   // Select a user
   const selectUser = (user: User) => {
-    if (!mentionStart) return;
-
-    const textBeforeMention = value.substring(0, mentionStart);
-    const textAfterMention = value.substring(mentionStart).replace(/@[\w]*/, '');
-    const newText = `${textBeforeMention}@${user.userId}${textAfterMention}`;
+    // Get current cursor position
+    const cursorPos = textareaRef?.current?.selectionStart ?? value.length;
+    
+    // Find the text from start to cursor position
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const textAfterCursor = value.substring(cursorPos);
+    
+    // Find the last @ before cursor
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex === -1) {
+      // No @ found, just insert @userId at cursor
+      const newText = `${textBeforeCursor}@${user.userId} ${textAfterCursor}`;
+      onChange(newText);
+      setShowDropdown(false);
+      setMentionQuery('');
+      setMentionStart(null);
+      
+      setTimeout(() => {
+        if (textareaRef?.current) {
+          const newCursorPos = cursorPos + user.userId.length + 2; // +2 for @ and space
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          textareaRef.current.focus();
+        }
+      }, 0);
+      return;
+    }
+    
+    // Get the text after @ (the partial mention that user typed)
+    const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+    
+    // Replace the partial mention with the complete userId
+    const textBeforeMention = value.substring(0, lastAtIndex);
+    const newText = `${textBeforeMention}@${user.userId} ${textAfterCursor}`;
 
     onChange(newText);
     setShowDropdown(false);
     setMentionQuery('');
     setMentionStart(null);
 
-    // Set cursor position after @mention
+    // Set cursor position after @mention and space
     setTimeout(() => {
       if (textareaRef?.current) {
-        const newCursorPos = mentionStart + user.userId.length + 1;
+        const newCursorPos = lastAtIndex + user.userId.length + 2; // +2 for @ and space
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
         textareaRef.current.focus();
       }

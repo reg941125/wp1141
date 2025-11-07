@@ -1,6 +1,7 @@
 # X Clone
 
-A full-stack Twitter/X clone built with Next.js 16, NextAuth, PostgreSQL, MongoDB, and Pusher.
+A full-stack Twitter/X clone built with Next.js 16, NextAuth, PostgreSQL, MongoDB, and Pusher.  
+vercel link: https://wp1141hw5xclone.vercel.app
 
 ## Features
 

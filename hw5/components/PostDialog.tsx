@@ -159,7 +159,7 @@ export default function PostDialog({ onClose, initialContent = '', draftId }: Po
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4">
-        <div className="bg-white rounded-2xl w-full max-w-lg my-8 max-h-[90vh] flex flex-col">
+        <div className="bg-white rounded-2xl w-full max-w-xl my-8 max-h-[90vh] flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
             <button
               onClick={handleClose}
