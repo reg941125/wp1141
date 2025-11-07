@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
-          userId: user.userId,
+          userId: user.userId || undefined,
         };
       },
     }),
@@ -73,15 +73,15 @@ export const authOptions: NextAuthOptions = {
           });
           
           if (dbUser) {
-            session.user.userId = dbUser.userId || token.userId;
+            session.user.userId = dbUser.userId || token.userId || undefined;
             session.user.name = dbUser.name || session.user.name;
             session.user.image = dbUser.image || session.user.image;
           } else {
-            session.user.userId = token.userId;
+            session.user.userId = token.userId || undefined;
           }
         } catch (error) {
           console.error('Error fetching user info in session:', error);
-          session.user.userId = token.userId;
+          session.user.userId = token.userId || undefined;
         }
       }
       return session;

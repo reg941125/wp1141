@@ -111,7 +111,7 @@ export async function PATCH(
     const { userId } = resolvedParams;
 
     // Verify user can only edit their own profile
-    if (session.user.userId !== userId) {
+    if (!session.user.userId || session.user.userId !== userId) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
