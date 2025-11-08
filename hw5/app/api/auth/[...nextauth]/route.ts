@@ -118,7 +118,7 @@ export const authOptions: NextAuthOptions = {
           if (existingUser) {
             // Check if this user already has an account with the same provider
             const hasThisProvider = existingUser.accounts.some(
-              (acc) => acc.provider === account.provider
+              (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
             );
 
             if (hasThisProvider) {
@@ -126,16 +126,10 @@ export const authOptions: NextAuthOptions = {
               return true;
             }
 
-            // Check if user has accounts with different providers
-            const hasDifferentProvider = existingUser.accounts.some(
-              (acc) => acc.provider !== account.provider
-            );
-
-            if (hasDifferentProvider) {
-              // This email is already linked to a different OAuth provider
-              // Return error URL to redirect with error parameter
-              return `/auth/signin?error=OAuthAccountNotLinked`;
-            }
+            // If user exists but doesn't have this provider, allow linking the new provider
+            // This allows users to use any OAuth provider to log in, even if they registered with a different one
+            // The PrismaAdapter will handle linking the account to the existing user
+            return true;
           }
         } catch (error) {
           console.error('Error checking account linking:', error);
