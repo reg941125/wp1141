@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "app/api/webhook/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/conversations/route.ts": {
+      "maxDuration": 10
+    },
+    "app/api/stats/route.ts": {
+      "maxDuration": 10
+    }
+  }
+}
+
