@@ -108,6 +108,15 @@ export async function handleInventory(userId: string): Promise<{
       });
     } else {
       message += `📦 ${itemName}${countDisplay} - ${effect?.description || '道具'}\n`;
+      quickReplyItems.push({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: `查看 ${itemName}${countDisplay}`,
+          data: `inspect_item_${userId}_${itemName}`,
+          displayText: `查看 ${itemName}`,
+        },
+      });
     }
   });
   
@@ -211,6 +220,55 @@ export async function handleUseItem(
   return {
     message,
     quickReply: getQuickReplyButtons(),
+  };
+}
+
+export async function handleInspectItem(
+  userId: string,
+  itemName: string
+): Promise<{
+  message: string;
+  quickReply?: any;
+}> {
+  const gameState = await getGameState(userId);
+  const itemCount = getItemCount(gameState.items, itemName);
+  
+  if (itemCount === 0) {
+    return {
+      message: `❌ 你沒有「${itemName}」這個道具。`,
+      quickReply: getQuickReplyButtons(),
+    };
+  }
+  
+  const { getItemIntroduction } = await import('./items');
+  const intro = await getItemIntroduction(itemName);
+  const countDisplay = itemCount > 1 ? `（持有 ${itemCount} 個）` : '';
+  const message = `📦 「${itemName}」${countDisplay}\n${intro}`;
+  
+  return {
+    message,
+    quickReply: {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '🎒 返回背包',
+            data: 'action_inventory',
+            displayText: '查看背包',
+          },
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '📊 查看狀態',
+            data: 'action_status',
+            displayText: '查看狀態',
+          },
+        },
+      ],
+    },
   };
 }
 
@@ -776,6 +834,7 @@ export function getQuickReplyButtons() {
           type: 'postback',
           label: '1️⃣ 探索',
           data: 'action_explore',
+          displayText: '探索',
         },
       },
       {
@@ -784,6 +843,7 @@ export function getQuickReplyButtons() {
           type: 'postback',
           label: '📊 查看狀態',
           data: 'action_status',
+          displayText: '查看狀態',
         },
       },
       {
@@ -792,6 +852,7 @@ export function getQuickReplyButtons() {
           type: 'postback',
           label: '🎒 查看背包',
           data: 'action_inventory',
+          displayText: '查看背包',
         },
       },
       {
@@ -800,6 +861,7 @@ export function getQuickReplyButtons() {
           type: 'postback',
           label: '🏘️ 前往城鎮',
           data: 'action_town',
+          displayText: '前往城鎮',
         },
       },
     ],

@@ -53,6 +53,9 @@ export const ITEM_EFFECTS: Record<string, ItemEffect> = {
   },
 };
 
+// 緩存已生成的道具介紹，避免重複調用 API
+const itemIntroductionCache: Record<string, string> = {};
+
 export function getItemEffect(itemName: string): ItemEffect | null {
   return ITEM_EFFECTS[itemName] || null;
 }
@@ -62,5 +65,53 @@ export function canUseItem(itemName: string): boolean {
   if (!effect) return false;
   // 只有有 HP 或金幣效果的道具才能使用
   return effect.hp !== undefined || effect.gold !== undefined;
+}
+
+/**
+ * 獲取道具介紹（使用 Gemini 生成，帶緩存）
+ * @param itemName 道具名稱
+ * @returns 道具介紹（5-20 字）
+ */
+export async function getItemIntroduction(itemName: string): Promise<string> {
+  // 檢查緩存
+  if (itemIntroductionCache[itemName]) {
+    return itemIntroductionCache[itemName];
+  }
+
+  const effect = getItemEffect(itemName);
+  
+  try {
+    // 動態導入以避免循環依賴
+    const { generateItemIntroduction } = await import('@/lib/gemini/client');
+    const intro = await generateItemIntroduction(itemName, effect || undefined);
+    
+    // 確保長度在 5-20 字之間
+    let finalIntro = intro.trim();
+    if (finalIntro.length > 20) {
+      finalIntro = finalIntro.slice(0, 20);
+    }
+    if (finalIntro.length < 5) {
+      finalIntro = finalIntro + '的神秘物品';
+      if (finalIntro.length > 20) {
+        finalIntro = finalIntro.slice(0, 20);
+      }
+    }
+    
+    // 存入緩存
+    itemIntroductionCache[itemName] = finalIntro;
+    return finalIntro;
+  } catch (error) {
+    console.error(`Error generating introduction for ${itemName}:`, error);
+    // 如果生成失敗，使用 fallback
+    const fallback = effect?.description || '神秘物品，似乎很重要';
+    const trimmed = fallback.trim();
+    if (trimmed.length > 20) {
+      return trimmed.slice(0, 20);
+    }
+    if (trimmed.length < 5) {
+      return trimmed + '的神秘物品';
+    }
+    return trimmed;
+  }
 }
 

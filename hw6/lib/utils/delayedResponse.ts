@@ -111,6 +111,10 @@ export function getProcessingMessage(
       '✨ 正在使用道具...',
       '✨ 道具生效中...',
     ],
+    inspect_item: [
+      '🔍 正在查看道具...',
+      '🔍 請稍候...',
+    ],
     default: [
       '⏳ 處理中...',
     ],

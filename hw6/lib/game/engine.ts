@@ -83,9 +83,13 @@ export async function updateGameState(
       gameState.items.push(...effects.items.add);
     }
     if (effects.items.remove) {
-      gameState.items = gameState.items.filter(
-        (item: string) => !effects.items!.remove!.includes(item)
-      );
+      const itemsToRemove = [...effects.items.remove];
+      itemsToRemove.forEach((name) => {
+        const index = gameState.items.indexOf(name);
+        if (index !== -1) {
+          gameState.items.splice(index, 1);
+        }
+      });
     }
   }
   
@@ -214,18 +218,14 @@ export async function resetGame(userId: string): Promise<GameStateType> {
 }
 
 export function formatStatusMessage(state: GameStateType): string {
-  const hpBar = '█'.repeat(Math.floor((state.currentHP / state.maxHP) * 10));
-  const hpPercent = Math.floor((state.currentHP / state.maxHP) * 100);
   const expRequired = getExpRequiredForLevel(state.level);
-  const expBar = '█'.repeat(Math.floor((state.experience / expRequired) * 10));
-  const expPercent = Math.floor((state.experience / expRequired) * 100);
   
-  let message = `📊 冒險者狀態\n\n`;
+  let message = `📊 冒險者狀態\n`;
   message += `⭐ 等級: ${state.level}\n`;
   message += `⚔️ 攻擊力: ${state.attack}\n`;
-  message += `❤️ HP: ${state.currentHP}/${state.maxHP} [${hpBar}] ${hpPercent}%\n`;
+  message += `❤️ HP: ${state.currentHP}/${state.maxHP}\n`;
   message += `💰 金幣: ${state.gold}\n`;
-  message += `✨ 經驗值: ${state.experience}/${expRequired} [${expBar}] ${expPercent}%\n`;
+  message += `✨ 經驗值: ${state.experience}/${expRequired}\n`;
   message += `🎒 道具: ${formatItems(state.items)}\n`;
   
   if (state.gameCompleted) {

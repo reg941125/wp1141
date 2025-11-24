@@ -8,6 +8,7 @@ import {
   handleReset,
   handleInventory,
   handleUseItem,
+  handleInspectItem,
   handleQuest,
   handleQuestAccept,
   handleQuestReject,
@@ -21,6 +22,51 @@ import { sendProcessingMessage, getProcessingMessage, delay } from '@/lib/utils/
 import { parseUserInput } from '@/lib/gemini/textParser';
 import { getGameState, updateGameState } from '@/lib/game/engine';
 import { formatItems } from '@/lib/game/utils';
+
+/**
+ * 根據 postback data 獲取按鈕的顯示文字
+ */
+function getButtonDisplayText(data: string, userId: string): string {
+  if (data.startsWith('action_')) {
+    const action = data.replace('action_', '');
+    const actionMap: Record<string, string> = {
+      'explore': '1️⃣ 探索',
+      'status': '📊 查看狀態',
+      'inventory': '🎒 查看背包',
+      'town': '🏘️ 前往城鎮',
+    };
+    return actionMap[action] || action;
+  } else if (data.startsWith('use_item_')) {
+    const parts = data.split('_');
+    if (parts.length >= 4) {
+      const itemName = parts.slice(3).join('_');
+      return `使用 ${itemName}`;
+    }
+    return '使用道具';
+  } else if (data.startsWith('inspect_item_')) {
+    const payload = data.replace('inspect_item_', '');
+    const payloadParts = payload.split('_');
+    if (payloadParts.length >= 2) {
+      const itemName = payloadParts.slice(1).join('_');
+      return `查看 ${itemName}`;
+    }
+    return '查看道具';
+  } else if (data === 'town_shop') {
+    return '🛒 前往商店';
+  } else if (data === 'town_heal') {
+    return '💚 前往治療所';
+  } else if (data === 'town_quest') {
+    return '📜 前往任務公會';
+  } else if (data.startsWith('quest_accept_')) {
+    return '✅ 接受任務';
+  } else if (data.startsWith('quest_reject_')) {
+    return '❌ 放棄任務';
+  } else if (data.startsWith('choice_')) {
+    // For choice, we'll get the option text from game state
+    return '選擇選項';
+  }
+  return '執行操作';
+}
 
 export async function handleTextMessage(event: MessageEvent): Promise<void> {
   if (event.message.type !== 'text') {
@@ -228,8 +274,8 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
   }
 
   try {
-
     // Save postback event
+    // Note: LINE Bot will automatically display the displayText from the button as user message
     await Conversation.create({
       userId,
       messageId: `postback_${Date.now()}_${Math.random()}`,
@@ -299,6 +345,29 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
         } else {
           response = {
             message: '無效的道具使用格式。',
+            quickReply: getQuickReplyButtons(),
+          };
+        }
+      } else if (data.startsWith('inspect_item_')) {
+        const payload = data.replace('inspect_item_', '');
+        const payloadParts = payload.split('_');
+        if (payloadParts.length >= 2) {
+          const targetUserId = payloadParts[0];
+          const itemName = payloadParts.slice(1).join('_');
+          
+          if (targetUserId === userId) {
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('inspect_item'), 500);
+            response = await handleInspectItem(userId, itemName);
+            actionType = 'inspect_item';
+          } else {
+            response = {
+              message: '無效的操作。',
+              quickReply: getQuickReplyButtons(),
+            };
+          }
+        } else {
+          response = {
+            message: '無效的道具查看格式。',
             quickReply: getQuickReplyButtons(),
           };
         }

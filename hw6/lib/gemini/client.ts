@@ -482,6 +482,59 @@ ${contextPrompt}
   }
 }
 
+export async function generateItemIntroduction(itemName: string, itemEffect?: { description: string; hp?: number; gold?: number }): Promise<string> {
+  // Check rate limit
+  if (!checkGeminiRateLimit()) {
+    // If rate limited, return fallback
+    return itemEffect?.description || '神秘物品，似乎很重要';
+  }
+
+  try {
+    const effectInfo = itemEffect 
+      ? `道具效果：${itemEffect.description}${itemEffect.hp ? `（恢復 ${itemEffect.hp} HP）` : ''}${itemEffect.gold ? `（獲得 ${itemEffect.gold} 金幣）` : ''}`
+      : '這是一個特殊的道具';
+
+    const prompt = `你是一個 RPG 遊戲的道具描述生成器。請為道具「${itemName}」生成一個簡短、生動的介紹。
+
+${effectInfo}
+
+要求：
+- 長度必須在 5-20 字之間（嚴格遵守）
+- 要生動有趣，符合 RPG 遊戲風格
+- 可以描述道具的外觀、質感、氣息、歷史等
+- 不要重複道具名稱
+- 使用繁體中文
+
+請直接回應介紹文字，不要包含任何其他內容或標點符號（除了必要的標點）。`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let intro = response.text().trim();
+    
+    // Remove any markdown formatting or extra text
+    intro = intro.replace(/```/g, '').replace(/json/g, '').trim();
+    
+    // Ensure length is between 5-20 characters
+    if (intro.length > 20) {
+      intro = intro.slice(0, 20);
+    }
+    if (intro.length < 5) {
+      // If too short, pad with descriptive text
+      intro = intro + '的神秘物品';
+      if (intro.length > 20) {
+        intro = intro.slice(0, 20);
+      }
+    }
+    
+    return intro;
+  } catch (error: any) {
+    console.error('Error generating item introduction:', error);
+    
+    // Return fallback introduction
+    return itemEffect?.description || '神秘物品，似乎很重要';
+  }
+}
+
 function getFallbackEvent(action: string): GameEvent {
   // 最簡單的 fallback，只在所有 LLM 調用都失敗時使用
   // 這是一個最基本的結構，不包含詳細描述，避免影響 LLM 的創意
