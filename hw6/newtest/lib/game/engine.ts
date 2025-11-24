@@ -84,7 +84,7 @@ export async function updateGameState(
     }
     if (effects.items.remove) {
       gameState.items = gameState.items.filter(
-        (item) => !effects.items!.remove!.includes(item)
+        (item: string) => !effects.items!.remove!.includes(item)
       );
     }
   }

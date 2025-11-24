@@ -9,7 +9,7 @@ export function delay(ms: number): Promise<void> {
 export async function sendProcessingMessage(
   replyToken: string,
   processingText: string,
-  delayMs: number = 1500
+  delayMs: number = 800
 ): Promise<void> {
   const client = getClient();
   

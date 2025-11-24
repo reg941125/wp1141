@@ -25,21 +25,22 @@ export async function GET(request: NextRequest) {
         const conversationCount = await Conversation.countDocuments({ userId });
         const lastConversation = await Conversation.findOne({ userId })
           .sort({ timestamp: -1 })
-          .lean();
+          .lean()
+          .exec();
         
-        const gameState = await GameState.findOne({ userId }).lean();
+        const gameState = await GameState.findOne({ userId }).lean().exec();
 
         return {
           userId,
           conversationCount,
-          lastActivity: lastConversation?.timestamp || null,
+          lastActivity: (lastConversation as any)?.timestamp || null,
           gameState: gameState
             ? {
-                currentHP: gameState.currentHP,
-                maxHP: gameState.maxHP,
-                gold: gameState.gold,
-                items: gameState.items,
-                gameCompleted: gameState.gameCompleted,
+                currentHP: (gameState as any).currentHP,
+                maxHP: (gameState as any).maxHP,
+                gold: (gameState as any).gold,
+                items: (gameState as any).items,
+                gameCompleted: (gameState as any).gameCompleted,
               }
             : null,
         };

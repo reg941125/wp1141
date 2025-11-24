@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { GameState, GameEvent } from '@/lib/game/types';
+import { getExpRequiredForLevel } from '@/lib/game/types';
 import { checkGeminiRateLimit } from '@/lib/utils/rateLimit';
-import { LLMError, RateLimitError, getFallbackMessage } from '@/lib/utils/errors';
+import { LLMError, RateLimitError } from '@/lib/utils/errors';
+import { formatItems } from '@/lib/game/utils';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
@@ -10,17 +12,18 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 const SYSTEM_PROMPT = `你是一個極具創意的 RPG 遊戲事件生成器。玩家扮演一位冒險者，在世界中探索。
 
 遊戲規則：
-1. 玩家有生命值 (HP)、金幣 (Gold)、道具 (Items) 和劇情標記 (Story Flags)
+1. 玩家有等級、生命值 (HP)、金幣、經驗值、道具和劇情標記
 2. 每次探索會觸發**完全隨機、充滿創意**的事件，必須極度多樣化
-3. 事件描述應該生動有趣、引人入勝，長度在 80-150 字之間
+3. 事件描述應該生動有趣、引人入勝，長度在 40-80 字之間（簡潔有力，不要冗長）
 4. 每個事件必須提供 2-3 個明確的選項，選項要有不同的風險和回報
-5. 每個選項都會影響玩家的狀態（HP、金幣、道具、劇情標記）
-6. 玩家需要擊敗最終 Boss 才能破關
+5. 每個選項都會影響玩家的狀態（HP、經驗值、金幣、道具、劇情標記）
+6. **重要：每個選項都應該給予經驗值獎勵**（戰鬥勝利：20-50，完成任務：30-60，探索發現：10-30，解決謎題：15-40等）
+7. 玩家需要擊敗最終 Boss 才能破關
 
 **極度隨機性和創意要求：**
 - **不要限制於特定事件類型**，你可以創造任何類型的事件
@@ -31,17 +34,29 @@ const SYSTEM_PROMPT = `你是一個極具創意的 RPG 遊戲事件生成器。�
 - **大膽創新**：可以加入意想不到的情節轉折、幽默元素、哲學思考、道德困境等
 - 偶爾加入**極端事件**（極好的運氣、極壞的運氣、完全意外的結果）
 
-**事件類型範例（但不限於此）：**
-- combat: 各種戰鬥（野狼、哥布林、骷髏、魔法生物、機械守衛、元素精靈、變形怪、幻影、詛咒生物等）
-- treasure: 各種寶物（寶箱、隱藏寶藏、魔法物品、古老遺物、被詛咒的寶物、會說話的寶箱等）
-- encounter: 各種遭遇（神秘 NPC、迷路的商人、受傷的旅人、奇怪的生物、時間旅行者、平行世界的自己等）
-- mystery: 各種神秘（魔法傳送門、古老遺跡、奇怪的現象、預言、時空裂縫、記憶碎片等）
-- trap: 各種陷阱（地洞、毒氣、魔法陷阱、心理陷阱、時間陷阱、幻覺陷阱等）
-- npc: 各種互動（任務、交易、對話、謎題、賭博、競賽、合作、背叛等）
-- environment: 環境事件（天氣變化、地形改變、自然災害、魔法風暴、時間流逝等）
-- social: 社交事件（團隊合作、背叛、談判、說服、欺騙、幫助他人等）
-- puzzle: 解謎事件（邏輯謎題、記憶挑戰、模式識別、創意思考等）
-- moral: 道德抉擇（拯救 vs 利益、誠實 vs 欺騙、個人 vs 集體等）
+**事件類型範例（僅供參考，請創造全新內容）：**
+⚠️ **重要：以下只是範例！**
+
+範例類型（僅供理解概念）：
+- combat: 戰鬥類型（範例：野狼、哥布林、骷髏等）
+- treasure: 寶物類型（範例：寶箱、隱藏寶藏等，但請創造全新的發現方式）
+- encounter: 遭遇類型（範例：NPC、商人、旅人等，但請創造全新的角色）
+- mystery: 神秘類型（範例：傳送門、遺跡、現象等，但請創造全新的神秘事件）
+- trap: 陷阱類型（範例：地洞、毒氣、魔法陷阱等，但請創造全新的陷阱機制）
+- npc: 互動類型（範例：任務、交易、對話等，但請創造全新的互動方式）
+- environment: 環境類型（範例：天氣、地形、災害等，但請創造全新的環境變化）
+- social: 社交類型（範例：合作、背叛、談判等，但請創造全新的社交情境）
+- puzzle: 解謎類型（範例：邏輯謎題、記憶挑戰等，但請創造全新的謎題）
+- moral: 道德類型（範例：拯救 vs 利益等，但請創造全新的道德困境）
+
+**嚴格要求：**
+- ❌ 絕對不要使用「野狼從樹叢跳出來」這種常見描述
+- ❌ 絕對不要使用「發現古老寶箱」這種模板化描述
+- ❌ 絕對不要使用「魔法傳送門」這種常見元素
+- ❌ 絕對不要重複任何之前生成過的內容
+- ✅ 每次都要創造**完全獨特、前所未見**的事件
+- ✅ 發揮創意，結合意想不到的元素
+- ✅ 讓每個事件都讓玩家感到驚喜和新鮮
 
 **創意提示：**
 - 可以結合多種類型（例如：戰鬥中的解謎、寶箱中的 NPC、陷阱中的道德抉擇）
@@ -52,11 +67,10 @@ const SYSTEM_PROMPT = `你是一個極具創意的 RPG 遊戲事件生成器。�
 
 請用繁體中文回應，並確保回應格式為有效的 JSON。`;
 
-const EVENT_GENERATION_PROMPT = (gameState: GameState, action: string) => {
+const EVENT_GENERATION_PROMPT = (gameState: GameState, action: string, userInput?: string) => {
   const statusInfo = `
 當前玩家狀態：
 - 等級: ${gameState.level || 1}
-- 攻擊力: ${gameState.attack || 10}
 - HP: ${gameState.currentHP}/${gameState.maxHP}
 - 經驗值: ${gameState.experience || 0}/${getExpRequiredForLevel(gameState.level || 1)}
 - 金幣: ${gameState.gold}
@@ -65,7 +79,40 @@ const EVENT_GENERATION_PROMPT = (gameState: GameState, action: string) => {
 - 遊戲完成: ${gameState.gameCompleted ? '是' : '否'}
 `;
 
-  // 極度隨機的創意提示詞
+  // 根據用戶輸入決定事件類型
+  let eventTypeGuidance = '';
+  if (userInput && userInput.trim()) {
+    const input = userInput.toLowerCase();
+    
+    // 戰鬥相關關鍵字
+    if (input.includes('打') || input.includes('戰鬥') || input.includes('戰鬥') || 
+        input.includes('攻擊') || input.includes('怪物') || input.includes('敵人') ||
+        input.includes('怪') || input.includes('fight') || input.includes('combat')) {
+      eventTypeGuidance = `\n**重要：玩家明確表示想要戰鬥（輸入：「${userInput}」），請生成一個**戰鬥類型 (combat)**的事件，包含怪物、敵人或其他戰鬥對手。`;
+    }
+    // 寶箱/寶物相關關鍵字
+    else if (input.includes('寶箱') || input.includes('寶物') || input.includes('寶藏') ||
+             input.includes('尋找') || input.includes('搜尋') || input.includes('探索') ||
+             input.includes('treasure') || input.includes('chest') || input.includes('寶')) {
+      eventTypeGuidance = `\n**重要：玩家想要尋找寶物（輸入：「${userInput}」），請生成一個**寶物類型 (treasure)**的事件，包含寶箱、隱藏寶藏或魔法物品。`;
+    }
+    // NPC/互動相關關鍵字
+    else if (input.includes('npc') || input.includes('對話') || input.includes('說話') ||
+             input.includes('任務') || input.includes('商人') || input.includes('幫助')) {
+      eventTypeGuidance = `\n**重要：玩家想要與 NPC 互動（輸入：「${userInput}」），請生成一個**NPC 互動類型 (npc)**的事件，包含任務、交易或對話。`;
+    }
+    // 神秘/謎題相關關鍵字
+    else if (input.includes('神秘') || input.includes('謎題') || input.includes('解謎') ||
+             input.includes('調查') || input.includes('探索') || input.includes('mystery')) {
+      eventTypeGuidance = `\n**重要：玩家想要探索神秘事件（輸入：「${userInput}」），請生成一個**神秘類型 (mystery)**的事件，包含魔法現象、遺跡或謎題。`;
+    }
+    // 如果用戶有輸入但沒有明確類型，讓 LLM 根據輸入判斷
+    else {
+      eventTypeGuidance = `\n**重要：玩家輸入：「${userInput}」，請根據這個輸入的意圖，生成相應類型的事件。如果輸入暗示戰鬥，生成戰鬥事件；如果暗示尋找寶物，生成寶物事件；如果暗示互動，生成 NPC 事件。`;
+    }
+  }
+
+  // 極度隨機的創意提示詞（如果沒有用戶輸入引導）
   const creativityPrompts = [
     '這次生成一個**完全創新、前所未有**的事件，不要使用常見的 RPG 模板',
     '這次生成一個**結合多種元素**的事件（例如：戰鬥+解謎、寶箱+道德抉擇）',
@@ -79,13 +126,18 @@ const EVENT_GENERATION_PROMPT = (gameState: GameState, action: string) => {
     '這次生成一個**完全隨機、無法預測**的事件',
   ];
   
-  const randomPrompt = creativityPrompts[Math.floor(Math.random() * creativityPrompts.length)];
+  const randomPrompt = userInput && userInput.trim() 
+    ? `根據玩家的輸入「${userInput}」生成相應的事件`
+    : creativityPrompts[Math.floor(Math.random() * creativityPrompts.length)];
 
   return `${SYSTEM_PROMPT}
 
 ${statusInfo}
 
 玩家執行的行動：${action}
+${userInput ? `玩家輸入：「${userInput}」` : ''}
+
+${eventTypeGuidance}
 
 **創意指令：**
 ${randomPrompt}
@@ -98,7 +150,7 @@ ${randomPrompt}
 請以以下 JSON 格式回應：
 
 {
-  "description": "事件描述（80-150字，必須生動有趣、極具創意、完全獨特）",
+  "description": "事件描述（40-80字，簡潔有力、生動有趣、極具創意、完全獨特）",
   "eventType": "任何合適的事件類型（可以是 combat, treasure, encounter, mystery, trap, npc, environment, social, puzzle, moral 等，或自創類型）",
   "options": [
     {
@@ -143,11 +195,14 @@ ${randomPrompt}
 - 如果玩家金幣 > 100：可以生成花費機會
 - 確保至少有一個選項不會導致死亡（HP 不會歸零）
 
-**創意要求：**
-- 每次生成的事件必須完全不同
-- 避免使用常見的模板（如「你在森林中遇到...」）
-- 加入有趣的細節和描述
-- 選項要有創意，不只是「是/否」
+**創意要求（嚴格遵守）：**
+- ⚠️ **絕對禁止重複**：每次生成的事件必須完全不同，不要使用任何之前生成過的內容
+- ⚠️ **禁止常見模板**：避免使用「你在森林中遇到...」、「一隻野狼跳出來...」、「發現古老寶箱...」等常見描述
+- ⚠️ **禁止固定元素**：不要固定使用野狼、寶箱、傳送門等常見元素，每次都要創造全新的內容
+- ✅ **必須創新**：加入意想不到的元素、創新的機制、獨特的描述
+- ✅ **必須多樣化**：每次都要創造完全不同的敵人、發現、遭遇、現象
+- ✅ **必須有趣**：加入有趣的細節、幽默、轉折、驚喜
+- ✅ **選項要有創意**：不只是「是/否」，要有創新的選擇方式
 
 現在請生成一個**完全隨機、充滿創意**的事件！
 `;
@@ -200,7 +255,8 @@ const TOWN_ACTION_PROMPT = (gameState: GameState) => {
 
 export async function generateEvent(
   gameState: GameState,
-  action: string
+  action: string,
+  userInput?: string
 ): Promise<GameEvent> {
   // Check rate limit
   if (!checkGeminiRateLimit()) {
@@ -210,7 +266,7 @@ export async function generateEvent(
   try {
     const prompt = action === 'town' 
       ? TOWN_ACTION_PROMPT(gameState)
-      : EVENT_GENERATION_PROMPT(gameState, action);
+      : EVENT_GENERATION_PROMPT(gameState, action, userInput);
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -248,7 +304,65 @@ export async function generateEvent(
       throw new LLMError('Service unavailable', String(error.status));
     }
     
-    // Return fallback event for other errors
+    // Try to generate fallback event using LLM with simplified prompt
+    try {
+      const fallbackPrompt = `你是一個 RPG 遊戲事件生成器。請生成一個**完全獨特、充滿創意**的探索事件。
+
+⚠️ **重要：絕對不要使用常見的模板（如野狼、寶箱、傳送門等），請創造全新的內容！**
+
+玩家狀態：
+- 等級: ${gameState.level || 1}
+- 攻擊力: ${gameState.attack || 10}
+- HP: ${gameState.currentHP}/${gameState.maxHP}
+- 經驗值: ${gameState.experience || 0}/${getExpRequiredForLevel(gameState.level || 1)}
+- 金幣: ${gameState.gold}
+- 道具: ${formatItems(gameState.items)}
+
+請生成一個簡短的探索事件（40-60字），必須：
+- 完全獨特，不要使用任何常見的 RPG 模板
+- 充滿創意，讓玩家感到驚喜
+- 包含 2-3 個選項
+- 每個選項都應該給予經驗值（10-30）
+
+請以 JSON 格式回應：
+{
+  "description": "事件描述（40-60字，簡潔有力、必須獨特創新）",
+  "eventType": "任何合適的類型",
+  "options": [
+    {
+      "text": "選項1",
+      "action": "action1",
+      "effects": {
+        "hp": 數值,
+        "experience": 10-30,
+        "gold": 數值,
+        "items": { "add": [] }
+      }
+    }
+  ]
+}`;
+
+      const fallbackResult = await model.generateContent(fallbackPrompt);
+      const fallbackResponse = await fallbackResult.response;
+      const fallbackText = fallbackResponse.text();
+
+      let fallbackJsonText = fallbackText.trim();
+      if (fallbackJsonText.includes('```json')) {
+        fallbackJsonText = fallbackJsonText.split('```json')[1].split('```')[0].trim();
+      } else if (fallbackJsonText.includes('```')) {
+        fallbackJsonText = fallbackJsonText.split('```')[1].split('```')[0].trim();
+      }
+
+      const fallbackEvent = JSON.parse(fallbackJsonText) as GameEvent;
+      
+      if (fallbackEvent.description && fallbackEvent.options && fallbackEvent.options.length >= 2) {
+        return fallbackEvent;
+      }
+    } catch (fallbackError) {
+      console.error('Error generating fallback event:', fallbackError);
+    }
+    
+    // Ultimate fallback: return a very simple event structure (only when all LLM calls fail)
     return getFallbackEvent(action);
   }
 }
@@ -282,13 +396,13 @@ ${effects.items?.remove ? `- 失去道具: ${effects.items.remove.join(', ')}` :
 - 金幣: ${gameState.gold}
 - 道具: ${formatItems(gameState.items)}
 
-請生成玩家選擇這個選項後的結果描述（50-100字），描述發生了什麼事。
+請生成玩家選擇這個選項後的結果描述（30-60字），簡潔描述發生了什麼事。
 
 如果選擇導致發現新事物（如寶箱、怪物、NPC等），請在描述中明確提到，並在回應中標記 "FOLLOW_UP_EVENT"。
 
 請以 JSON 格式回應：
 {
-  "resultDescription": "選擇結果的描述（50-100字）",
+  "resultDescription": "選擇結果的描述（30-60字，簡潔有力）",
   "shouldGenerateFollowUp": true/false（如果發現新事物需要後續事件則為 true）
 }
 
@@ -369,125 +483,60 @@ ${contextPrompt}
 }
 
 function getFallbackEvent(action: string): GameEvent {
-  // 隨機選擇一個 fallback 事件類型，增加多樣性
-  const eventTypes: Array<'combat' | 'treasure' | 'encounter' | 'mystery' | 'trap'> = 
-    ['combat', 'treasure', 'encounter', 'mystery', 'trap'];
-  const randomType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-
+  // 最簡單的 fallback，只在所有 LLM 調用都失敗時使用
+  // 這是一個最基本的結構，不包含詳細描述，避免影響 LLM 的創意
   const fallbackEvents: Record<string, GameEvent> = {
     explore: {
-      description: randomType === 'combat' 
-        ? '一隻兇猛的野狼從樹叢中跳出來，露出尖銳的獠牙！牠看起來很餓，準備攻擊你。'
-        : randomType === 'treasure'
-        ? '你發現了一個古老的寶箱，上面佈滿了灰塵和神秘的符文。箱子看起來很重，但你不知道裡面有什麼。'
-        : randomType === 'mystery'
-        ? '你注意到空氣中瀰漫著奇怪的魔法波動，前方出現了一個閃爍的傳送門。門的另一邊似乎通往未知的地方。'
-        : '你在探索時遇到了一個奇怪的現象。周圍的環境突然變得安靜，彷彿時間都停止了。',
-      eventType: randomType,
-      options: randomType === 'combat' 
-        ? [
-            {
-              text: '勇敢地戰鬥（可能受傷但可能獲得戰利品）',
-              action: 'fight',
-              effects: {
-                hp: -15,
-                gold: 25,
-                items: { add: ['狼牙'] },
-                storyFlags: { monstersDefeated: 1 },
-              },
-            },
-            {
-              text: '嘗試逃跑（可能受傷但不會獲得獎勵）',
-              action: 'flee',
-              effects: {
-                hp: -5,
-                gold: 0,
-              },
-            },
-            {
-              text: '使用道具（如果有藥草可以減少傷害）',
-              action: 'use_item',
-              effects: {
-                hp: -8,
-                gold: 20,
-                items: { remove: ['藥草'] },
-              },
-            },
-          ]
-        : randomType === 'treasure'
-        ? [
-            {
-              text: '謹慎地開啟寶箱（可能觸發陷阱）',
-              action: 'open_careful',
-              effects: {
-                hp: -5,
-                gold: 30,
-                items: { add: ['古老硬幣'] },
-              },
-            },
-            {
-              text: '直接開啟（快速但危險）',
-              action: 'open_quick',
-              effects: {
-                hp: -10,
-                gold: 50,
-                items: { add: ['神秘寶石'] },
-              },
-            },
-            {
-              text: '放棄開啟（安全但沒有收穫）',
-              action: 'leave',
-              effects: {
-                hp: 0,
-                gold: 0,
-              },
-            },
-          ]
-        : [
-            {
-              text: '調查這個現象',
-              action: 'investigate',
-              effects: {
-                hp: -5,
-                gold: 15,
-                items: { add: ['魔法碎片'] },
-                storyFlags: { mysteriesSolved: 1 },
-              },
-            },
-            {
-              text: '小心地繞過',
-              action: 'avoid',
-              effects: {
-                hp: 0,
-                gold: 0,
-              },
-            },
-          ],
+      description: '你在探索時遇到了一個事件。',
+      eventType: 'encounter',
+      options: [
+        {
+          text: '繼續探索',
+          action: 'continue',
+          effects: {
+            hp: 0,
+            experience: 15,
+            gold: 10,
+          },
+        },
+        {
+          text: '小心觀察',
+          action: 'observe',
+          effects: {
+            hp: 0,
+            experience: 10,
+            gold: 5,
+          },
+        },
+      ],
     },
     town: {
-      description: '你來到了繁華的城鎮，這裡有商店、治療所和任務公會。',
+      description: '你來到了城鎮。',
       eventType: 'npc',
       options: [
         {
-          text: '前往商店（花費 20 金幣購買藥草）',
+          text: '前往商店',
           action: 'shop',
           effects: {
+            experience: 10,
             gold: -20,
             items: { add: ['藥草'] },
           },
         },
         {
-          text: '前往治療所恢復 HP（花費 30 金幣）',
+          text: '前往治療所',
           action: 'heal',
           effects: {
+            experience: 10,
             gold: -30,
             hp: 50,
           },
         },
         {
-          text: '前往任務公會接受任務',
+          text: '前往任務公會',
           action: 'quest',
           effects: {
+            experience: 40,
             gold: 10,
             storyFlags: { questsCompleted: 1 },
           },

@@ -8,6 +8,9 @@ import {
   handleReset,
   handleInventory,
   handleUseItem,
+  handleQuest,
+  handleQuestAccept,
+  handleQuestReject,
   getQuickReplyButtons,
 } from '@/lib/game/events';
 import Conversation from '@/lib/db/models/Conversation';
@@ -16,6 +19,8 @@ import { checkUserRateLimit } from '@/lib/utils/rateLimit';
 import { RateLimitError, handleLLMError, handleDatabaseError, getFallbackMessage } from '@/lib/utils/errors';
 import { sendProcessingMessage, getProcessingMessage, delay } from '@/lib/utils/delayedResponse';
 import { parseUserInput } from '@/lib/gemini/textParser';
+import { getGameState, updateGameState } from '@/lib/game/engine';
+import { formatItems } from '@/lib/game/utils';
 
 export async function handleTextMessage(event: MessageEvent): Promise<void> {
   if (event.message.type !== 'text') {
@@ -72,29 +77,30 @@ export async function handleTextMessage(event: MessageEvent): Promise<void> {
               actionType = 'default';
               break;
             case 'explore':
-              await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 2000);
-              response = await handleExplore(userId);
+              await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 1000);
+              // Pass user input to handleExplore so Gemini can generate appropriate event
+              response = await handleExplore(userId, event.message.text);
               actionType = 'explore';
               break;
             case 'status':
-              await sendProcessingMessage(event.replyToken, getProcessingMessage('status'), 800);
+              await sendProcessingMessage(event.replyToken, getProcessingMessage('status'), 500);
               response = await handleStatus(userId);
               actionType = 'status';
               break;
             case 'inventory':
-              await sendProcessingMessage(event.replyToken, getProcessingMessage('inventory'), 800);
+              await sendProcessingMessage(event.replyToken, getProcessingMessage('inventory'), 500);
               response = await handleInventory(userId);
               actionType = 'inventory';
               break;
             case 'town':
-              await sendProcessingMessage(event.replyToken, getProcessingMessage('town'), 1500);
+              await sendProcessingMessage(event.replyToken, getProcessingMessage('town'), 800);
               response = await handleTown(userId);
               actionType = 'town';
               break;
             default:
-              // Fallback to explore
-              await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 2000);
-              response = await handleExplore(userId);
+              // Fallback to explore, pass user input
+              await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 1000);
+              response = await handleExplore(userId, event.message.text);
               actionType = 'explore';
           }
         } else {
@@ -105,25 +111,26 @@ export async function handleTextMessage(event: MessageEvent): Promise<void> {
             response = await handleReset(userId);
             actionType = 'default';
           } else if (text.includes('探索') || text === 'explore' || text === '1') {
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 2000);
-            response = await handleExplore(userId);
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 1000);
+            // Pass user input to handleExplore so Gemini can generate appropriate event
+            response = await handleExplore(userId, event.message.text);
             actionType = 'explore';
           } else if (text.includes('狀態') || text.includes('status') || text === '2') {
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('status'), 800);
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('status'), 500);
             response = await handleStatus(userId);
             actionType = 'status';
           } else if (text.includes('背包') || text.includes('inventory') || text === '3') {
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('inventory'), 800);
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('inventory'), 500);
             response = await handleInventory(userId);
             actionType = 'inventory';
           } else if (text.includes('城鎮') || text.includes('town') || text === '4') {
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('town'), 1500);
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('town'), 800);
             response = await handleTown(userId);
             actionType = 'town';
           } else {
-            // Default: treat as explore
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 2000);
-            response = await handleExplore(userId);
+            // Default: treat as explore, pass user input
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 1000);
+            response = await handleExplore(userId, event.message.text);
             actionType = 'explore';
           }
         }
@@ -136,9 +143,9 @@ export async function handleTextMessage(event: MessageEvent): Promise<void> {
           response = await handleReset(userId);
           actionType = 'default';
         } else {
-          // Fallback to explore on error
-          await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 2000);
-          response = await handleExplore(userId);
+          // Fallback to explore on error, pass user input
+          await sendProcessingMessage(event.replyToken, getProcessingMessage('explore'), 1000);
+          response = await handleExplore(userId, event.message.text);
           actionType = 'explore';
         }
       }
@@ -252,6 +259,7 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
         
         switch (action) {
           case 'explore':
+            // For postback actions, no user input available, so pass undefined
             response = await handleExplore(userId);
             break;
           case 'status':
@@ -279,7 +287,7 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
           
           if (targetUserId === userId) {
             // Send processing message
-            await sendProcessingMessage(event.replyToken, getProcessingMessage('use_item'), 1000);
+            await sendProcessingMessage(event.replyToken, getProcessingMessage('use_item'), 600);
             response = await handleUseItem(userId, itemName);
             actionType = 'use_item';
           } else {
@@ -291,6 +299,167 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
         } else {
           response = {
             message: '無效的道具使用格式。',
+            quickReply: getQuickReplyButtons(),
+          };
+        }
+      } else if (data === 'town_shop') {
+        // Shop action
+        const gameState = await getGameState(userId);
+        if (gameState.gold >= 20) {
+          await updateGameState(userId, {
+            gold: -20,
+            items: { add: ['藥草'] },
+          }, 'town_shop');
+          const newState = await getGameState(userId);
+          response = {
+            message: `🛒 商店\n\n你購買了藥草，花費了 20 金幣。\n\n當前狀態：\n💰 金幣: ${newState.gold}\n🎒 道具: ${formatItems(newState.items)}`,
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'postback',
+                    label: '🔙 返回城鎮',
+                    data: 'action_town',
+                    displayText: '返回城鎮',
+                  },
+                },
+              ],
+            },
+          };
+        } else {
+          response = {
+            message: '🛒 商店\n\n你的金幣不足（需要 20 金幣）。',
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'postback',
+                    label: '🔙 返回城鎮',
+                    data: 'action_town',
+                    displayText: '返回城鎮',
+                  },
+                },
+              ],
+            },
+          };
+        }
+        actionType = 'town';
+      } else if (data === 'town_heal') {
+        // Heal action
+        const gameState = await getGameState(userId);
+        if (gameState.gold >= 30) {
+          const healAmount = Math.min(50, gameState.maxHP - gameState.currentHP);
+          await updateGameState(userId, {
+            gold: -30,
+            hp: healAmount,
+          }, 'town_heal');
+          const newState = await getGameState(userId);
+          response = {
+            message: `💚 治療所\n\n你接受了治療，恢復了 ${healAmount} HP，花費了 30 金幣。\n\n當前狀態：\n❤️ HP: ${newState.currentHP}/${newState.maxHP}\n💰 金幣: ${newState.gold}`,
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'postback',
+                    label: '🔙 返回城鎮',
+                    data: 'action_town',
+                    displayText: '返回城鎮',
+                  },
+                },
+              ],
+            },
+          };
+        } else {
+          response = {
+            message: '💚 治療所\n\n你的金幣不足（需要 30 金幣）。',
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'postback',
+                    label: '🔙 返回城鎮',
+                    data: 'action_town',
+                    displayText: '返回城鎮',
+                  },
+                },
+              ],
+            },
+          };
+        }
+        actionType = 'town';
+      } else if (data === 'town_quest') {
+        // Quest action - generate quest using LLM
+        await sendProcessingMessage(event.replyToken, getProcessingMessage('quest'), 1000);
+        response = await handleQuest(userId);
+        actionType = 'quest';
+      } else if (data.startsWith('quest_accept_')) {
+        // Accept quest
+        const parts = data.split('_');
+        if (parts.length >= 3 && parts[2] === userId) {
+          await sendProcessingMessage(event.replyToken, getProcessingMessage('quest'), 1000);
+          response = await handleQuestAccept(userId);
+          
+          // If response has questEventMessage, send two separate messages
+          if ((response as any).questEventMessage) {
+            // Send first message (acceptance message)
+            await getClient().pushMessage(userId, {
+              type: 'text',
+              text: response.message,
+            });
+            
+            // Send second message (quest event) with quickReply
+            await getClient().pushMessage(userId, {
+              type: 'text',
+              text: (response as any).questEventMessage,
+              quickReply: response.quickReply,
+            });
+            
+            // Save both messages to conversation
+            await Conversation.create({
+              userId,
+              messageId: `reply_${Date.now()}_${Math.random()}`,
+              timestamp: new Date(),
+              messageType: 'text',
+              content: response.message,
+              response: response.message,
+              metadata: { postbackData: data, type: 'quest_accept' },
+            });
+            
+            await Conversation.create({
+              userId,
+              messageId: `reply_${Date.now()}_${Math.random()}`,
+              timestamp: new Date(),
+              messageType: 'text',
+              content: (response as any).questEventMessage,
+              response: (response as any).questEventMessage,
+              metadata: { postbackData: data, type: 'quest_event' },
+            });
+            
+            // Don't send response again in the normal flow
+            actionType = 'quest_sent';
+            return;
+          }
+          
+          actionType = 'quest';
+        } else {
+          response = {
+            message: '無效的任務操作。',
+            quickReply: getQuickReplyButtons(),
+          };
+        }
+      } else if (data.startsWith('quest_reject_')) {
+        // Reject quest - return to town
+        const parts = data.split('_');
+        if (parts.length >= 3 && parts[2] === userId) {
+          response = await handleQuestReject(userId);
+          actionType = 'town';
+        } else {
+          response = {
+            message: '無效的任務操作。',
             quickReply: getQuickReplyButtons(),
           };
         }
@@ -321,7 +490,7 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
             }
             
             // Send processing message with context
-            await sendProcessingMessage(event.replyToken, processingMessage, 2000);
+            await sendProcessingMessage(event.replyToken, processingMessage, 1000);
             response = await handleChoice(userId, `event_${Date.now()}`, optionIndex);
             actionType = 'choice';
           } else {
@@ -358,6 +527,11 @@ export async function handlePostback(event: PostbackEvent): Promise<void> {
     }
 
     // Send actual response using pushMessage (since replyToken was already used for processing message)
+    // Skip if quest_accept already sent messages separately
+    if (actionType === 'quest_sent') {
+      return; // Messages already sent in quest_accept handler
+    }
+    
     if (actionType !== 'default') {
       await getClient().pushMessage(userId, {
         type: 'text',
