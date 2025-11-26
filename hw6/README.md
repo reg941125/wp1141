@@ -1,12 +1,12 @@
 # LINE RPG Bot System
 
-一個整合 Gemini API 的 LINE Bot RPG 遊戲系統，使用 Next.js + TypeScript 開發。
+一個整合 Gemini API 的 LINE Bot RPG 遊戲系統，使用 Next.js + TypeScript 開發。  
 Bot Id: @175jtxwa    
 Deploy Link: https://wp1141hw6linebot.vercel.app/  
 除了可使用探索進行隨機的探索事件，也可以直接跟 Bot 進行對話，Bot 會根據對話內容生成相應的回應。  
 例如：  
 我想戰鬥 -> Bot 會生成相應的戰鬥事件，並且玩家可以選擇戰鬥或逃跑。  
-我想打鍾心哲 -> Bot 會生成跟鍾心哲有關的對話內容。
+我想打鍾心哲 -> Bot 會生成跟鍾心哲有關的對話內容。  
 
 ## 功能特色
 

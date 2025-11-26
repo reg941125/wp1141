@@ -21,8 +21,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Get conversations
+    // If userId is specified, sort ascending (oldest first) for chronological order
+    // Otherwise, sort descending (newest first) for general list
+    const sortOrder = userId ? 1 : -1;
     const conversations = await Conversation.find(query)
-      .sort({ timestamp: -1 })
+      .sort({ timestamp: sortOrder })
       .skip(skip)
       .limit(limit)
       .lean();

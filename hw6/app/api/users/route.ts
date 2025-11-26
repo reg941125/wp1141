@@ -36,11 +36,14 @@ export async function GET(request: NextRequest) {
           lastActivity: (lastConversation as any)?.timestamp || null,
           gameState: gameState
             ? {
+                level: (gameState as any).level || 1,
+                attack: (gameState as any).attack || 10,
                 currentHP: (gameState as any).currentHP,
                 maxHP: (gameState as any).maxHP,
                 gold: (gameState as any).gold,
-                items: (gameState as any).items,
-                gameCompleted: (gameState as any).gameCompleted,
+                experience: (gameState as any).experience || 0,
+                items: (gameState as any).items || [],
+                gameCompleted: (gameState as any).gameCompleted || false,
               }
             : null,
         };

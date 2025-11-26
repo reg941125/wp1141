@@ -17,9 +17,12 @@ interface User {
   conversationCount?: number;
   lastActivity?: Date | null;
   gameState?: {
+    level: number;
+    attack: number;
     currentHP: number;
     maxHP: number;
     gold: number;
+    experience: number;
     items: string[];
     gameCompleted: boolean;
   } | null;
@@ -278,14 +281,6 @@ export default function AdminPage() {
                 <h2 className="text-xl font-semibold">用戶對話記錄</h2>
                 <p className="text-sm text-gray-500 mt-1">
                   用戶 ID: {selectedUserId}
-                  {users.find((u) => u.userId === selectedUserId)?.gameState && (
-                    <span className="ml-4">
-                      HP: {users.find((u) => u.userId === selectedUserId)?.gameState?.currentHP}/
-                      {users.find((u) => u.userId === selectedUserId)?.gameState?.maxHP} | 
-                      金幣: {users.find((u) => u.userId === selectedUserId)?.gameState?.gold} |
-                      道具: {users.find((u) => u.userId === selectedUserId)?.gameState?.items?.join(', ') || '無'}
-                    </span>
-                  )}
                 </p>
               </div>
               <button
@@ -299,6 +294,63 @@ export default function AdminPage() {
                 ✕ 關閉
               </button>
             </div>
+            {/* Player Status Card */}
+            {users.find((u) => u.userId === selectedUserId)?.gameState && (
+              <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">📊 玩家狀態</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">⭐ 等級</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.level || 1}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">⚔️ 攻擊力</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.attack || 10}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">❤️ HP</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.currentHP}/
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.maxHP}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">💰 金幣</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.gold}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">✨ 經驗值</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.experience || 0}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">🎒 道具數量</div>
+                    <div className="text-xl font-bold text-gray-800">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.items?.length || 0}
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm col-span-2">
+                    <div className="text-xs text-gray-500 mb-1">🎒 道具列表</div>
+                    <div className="text-sm font-medium text-gray-800 break-words">
+                      {users.find((u) => u.userId === selectedUserId)?.gameState?.items?.join(', ') || '無'}
+                    </div>
+                  </div>
+                  {users.find((u) => u.userId === selectedUserId)?.gameState?.gameCompleted && (
+                    <div className="bg-green-100 p-3 rounded-lg shadow-sm col-span-2">
+                      <div className="text-xs text-green-700 mb-1">🎉 遊戲狀態</div>
+                      <div className="text-sm font-bold text-green-800">已完成遊戲</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="p-6 max-h-96 overflow-y-auto">
               {userConversations.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">沒有對話記錄</div>
