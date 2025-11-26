@@ -218,12 +218,39 @@ export async function handleTextMessage(event: MessageEvent): Promise<void> {
         quickReply: response.quickReply,
       });
     } else {
-      // For default/welcome message, use replyToken
-      await lineClient.replyMessage(event.replyToken, {
-        type: 'text',
-        text: response.message,
-        quickReply: response.quickReply,
-      });
+      // For default/welcome message, check if there's a statusMessage to send first
+      if ((response as any).statusMessage) {
+        // Send status message first
+        await lineClient.replyMessage(event.replyToken, {
+          type: 'text',
+          text: (response as any).statusMessage,
+        });
+        
+        // Then send welcome message with buttons using pushMessage
+        await getClient().pushMessage(userId, {
+          type: 'text',
+          text: response.message,
+          quickReply: response.quickReply,
+        });
+        
+        // Save both messages
+        await Conversation.create({
+          userId,
+          messageId: `reply_${Date.now()}_${Math.random()}`,
+          timestamp: new Date(),
+          messageType: 'text',
+          content: (response as any).statusMessage,
+          response: (response as any).statusMessage,
+          metadata: { replyToken: event.replyToken, type: 'status' },
+        });
+      } else {
+        // For default/welcome message, use replyToken
+        await lineClient.replyMessage(event.replyToken, {
+          type: 'text',
+          text: response.message,
+          quickReply: response.quickReply,
+        });
+      }
     }
 
     // Save bot response

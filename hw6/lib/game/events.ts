@@ -868,17 +868,20 @@ export function getQuickReplyButtons() {
   };
 }
 
-export function handleReset(userId: string): Promise<{
+export async function handleReset(userId: string): Promise<{
   message: string;
+  statusMessage?: string;
   quickReply?: any;
 }> {
-  return new Promise(async (resolve) => {
-    const { resetGame } = await import('./engine');
-    await resetGame(userId);
-    resolve({
-      message: '🎮 遊戲已重置！開始新的冒險吧！\n\n使用下方的按鈕開始探索。',
-      quickReply: getQuickReplyButtons(),
-    });
-  });
+  const { resetGame, getGameState, formatStatusMessage } = await import('./engine');
+  await resetGame(userId);
+  const gameState = await getGameState(userId);
+  const statusMessage = formatStatusMessage(gameState);
+  
+  return {
+    statusMessage: statusMessage,
+    message: '🎮 遊戲已重置！開始新的冒險吧！\n\n使用下方的按鈕開始探索。',
+    quickReply: getQuickReplyButtons(),
+  };
 }
 
