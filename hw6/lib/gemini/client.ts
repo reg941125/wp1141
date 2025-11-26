@@ -14,6 +14,23 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+/**
+ * 清理 JSON 文本，修復常見的格式問題
+ * - 移除數字前的 + 號（如 +15 -> 15）
+ * - 移除多餘的空白字符
+ */
+function cleanJsonText(jsonText: string): string {
+  // 移除數字前的 + 號（正數前綴）
+  // 匹配模式：": +數字 或 ": +數字.數字
+  let cleaned = jsonText.replace(/:\s*\+(\d+\.?\d*)/g, ': $1');
+  
+  // 移除其他可能的 + 號前綴（在數組或對象中）
+  cleaned = cleaned.replace(/,\s*\+(\d+\.?\d*)/g, ', $1');
+  cleaned = cleaned.replace(/\[\s*\+(\d+\.?\d*)/g, '[$1');
+  
+  return cleaned;
+}
+
 const SYSTEM_PROMPT = `你是一個極具創意的 RPG 遊戲事件生成器。玩家扮演一位冒險者，在世界中探索。
 
 遊戲規則：
@@ -24,6 +41,7 @@ const SYSTEM_PROMPT = `你是一個極具創意的 RPG 遊戲事件生成器。�
 5. 每個選項都會影響玩家的狀態（HP、經驗值、金幣、道具、劇情標記）
 6. **重要：每個選項都應該給予經驗值獎勵**（戰鬥勝利：20-50，完成任務：30-60，探索發現：10-30，解決謎題：15-40等）
 7. 玩家需要擊敗最終 Boss 才能破關
+8. 希望你可以思考快一點
 
 **極度隨機性和創意要求：**
 - **不要限制於特定事件類型**，你可以創造任何類型的事件
@@ -280,6 +298,9 @@ export async function generateEvent(
       jsonText = jsonText.split('```')[1].split('```')[0].trim();
     }
 
+    // Clean JSON text to fix common formatting issues
+    jsonText = cleanJsonText(jsonText);
+
     const event = JSON.parse(jsonText) as GameEvent;
 
     // Validate event structure
@@ -353,6 +374,9 @@ export async function generateEvent(
         fallbackJsonText = fallbackJsonText.split('```')[1].split('```')[0].trim();
       }
 
+      // Clean JSON text to fix common formatting issues
+      fallbackJsonText = cleanJsonText(fallbackJsonText);
+
       const fallbackEvent = JSON.parse(fallbackJsonText) as GameEvent;
       
       if (fallbackEvent.description && fallbackEvent.options && fallbackEvent.options.length >= 2) {
@@ -423,6 +447,9 @@ ${effects.items?.remove ? `- 失去道具: ${effects.items.remove.join(', ')}` :
     } else if (jsonText.includes('```')) {
       jsonText = jsonText.split('```')[1].split('```')[0].trim();
     }
+
+    // Clean JSON text to fix common formatting issues
+    jsonText = cleanJsonText(jsonText);
 
     const choiceResult = JSON.parse(jsonText);
     return {

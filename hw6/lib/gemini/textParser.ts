@@ -11,6 +11,17 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+/**
+ * 清理 JSON 文本，修復常見的格式問題
+ * - 移除數字前的 + 號（如 +15 -> 15）
+ */
+function cleanJsonText(jsonText: string): string {
+  // 移除數字前的 + 號（正數前綴）
+  return jsonText.replace(/:\s*\+(\d+\.?\d*)/g, ': $1')
+                 .replace(/,\s*\+(\d+\.?\d*)/g, ', $1')
+                 .replace(/\[\s*\+(\d+\.?\d*)/g, '[$1');
+}
+
 const TEXT_PARSER_PROMPT = `你是一個 RPG 遊戲的文本解析器。根據玩家的輸入文字，判斷玩家想要執行的動作。
 
 可用的動作類型：
@@ -56,6 +67,9 @@ export async function parseUserInput(userText: string): Promise<{
     } else if (jsonText.includes('```')) {
       jsonText = jsonText.split('```')[1].split('```')[0].trim();
     }
+
+    // Clean JSON text to fix common formatting issues
+    jsonText = cleanJsonText(jsonText);
 
     const parsed = JSON.parse(jsonText);
     
